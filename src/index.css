@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: dark; }
+html, body, #root { height: 100%; }
+body { @apply bg-base text-ink font-sans antialiased; font-feature-settings: 'cv11', 'ss01', 'tnum'; }
+* { scrollbar-width: thin; scrollbar-color: #2a2a38 transparent; }
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb { background: #2a2a38; border-radius: 8px; }
+*::-webkit-scrollbar-track { background: transparent; }
+
+@layer components {
+  .card { @apply bg-card border border-line rounded-xl shadow-card; }
+  .card-hover { @apply transition-colors hover:border-line2; }
+  .label { @apply text-[10.5px] font-semibold tracking-[0.14em] uppercase text-muted; }
+  .num { @apply font-mono tabular-nums; }
+  .btn { @apply inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[13px] font-medium border transition-colors select-none disabled:opacity-40 disabled:cursor-not-allowed; }
+  .btn-primary { @apply btn bg-accent/90 hover:bg-accent border-accent/60 text-white shadow-glow; }
+  .btn-ghost { @apply btn bg-transparent hover:bg-raised border-line text-soft hover:text-ink; }
+  .btn-subtle { @apply btn bg-raised hover:bg-line border-line text-soft hover:text-ink; }
+  .btn-danger { @apply btn bg-bad/10 hover:bg-bad/20 border-bad/30 text-bad; }
+  .btn-xs { @apply px-2 py-1 text-[11.5px] rounded-md; }
+  .input { @apply w-full bg-panel border border-line rounded-lg px-3 py-2 text-[13px] text-ink placeholder:text-muted/70 focus:outline-none focus:border-accent/60 focus:ring-2 focus:ring-accent/20; }
+  .chip { @apply inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10.5px] font-semibold tracking-wide border; }
+  .tab { @apply px-3 py-1.5 text-[12.5px] font-medium rounded-lg text-muted hover:text-ink transition-colors whitespace-nowrap; }
+  .tab-active { @apply bg-raised text-ink border border-line; }
+  .grid-bg { background-image: radial-gradient(rgba(255,255,255,0.035) 1px, transparent 1px); background-size: 22px 22px; }
+  .glow-line { background: linear-gradient(90deg, transparent, rgba(124,108,246,0.6), transparent); height: 1px; }
+  .kbd { @apply font-mono text-[10px] px-1.5 py-0.5 rounded border border-line2 bg-raised text-muted; }
+  .checkbox { @apply h-4 w-4 rounded border border-line2 bg-panel accent-[#7c6cf6] cursor-pointer; }
+  .prose-sm p { @apply text-[13px] text-soft leading-relaxed; }
+}
