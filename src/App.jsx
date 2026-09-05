@@ -11,6 +11,7 @@ import { StatisticsPage, AptitudePage, DsaPage, BusinessPage, DomainPage } from 
 import { ProjectHub, ProjectDetail, Portfolio, GithubPage } from './pages/Projects'
 import InterviewCenter from './pages/Interviews'
 import { JobsPage, ApplicationsPage, ResumePage, LinkedInPage, NetworkingPage } from './pages/Career'
+import ScratchpadPage from './pages/Scratchpad'
 import { ProgressPage, DifferentiationPage, ResourcesPage, NotesPage, RevisionPage, CatchUpPage, SettingsPage } from './pages/System'
 
 export default function App() {
@@ -45,6 +46,7 @@ export default function App() {
           <Route path="/differentiation" element={<DifferentiationPage />} />
           <Route path="/resources" element={<ResourcesPage />} />
           <Route path="/notes" element={<NotesPage />} />
+          <Route path="/scratchpad" element={<ScratchpadPage />} />
           <Route path="/revision" element={<RevisionPage />} />
           <Route path="/catch-up" element={<CatchUpPage />} />
           <Route path="/settings" element={<SettingsPage />} />

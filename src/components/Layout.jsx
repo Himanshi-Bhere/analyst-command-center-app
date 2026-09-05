@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, CalendarCheck, CalendarRange, CalendarDays, Calendar, Map, Database, Table2, BarChart3, Sigma, Code2, Briefcase, Brain, Binary, ShoppingCart, TrendingUp, Landmark, FolderKanban, Layers, Github, Search, ClipboardList, MessageSquare, FileText, Linkedin, Users, Activity, Library, StickyNote, Repeat, LifeBuoy, Settings, Menu, X, Bell, Command, Zap, ChevronRight, Sun, Award } from 'lucide-react'
+import { LayoutDashboard, CalendarCheck, CalendarRange, CalendarDays, Calendar, Map, Database, Table2, BarChart3, Sigma, Code2, Briefcase, Brain, Binary, ShoppingCart, TrendingUp, Landmark, FolderKanban, Layers, Github, Search, ClipboardList, MessageSquare, FileText, Linkedin, Users, Activity, Library, StickyNote, Repeat, LifeBuoy, Settings, Menu, X, Bell, Command, Zap, ChevronRight, Sun, Award, PenLine, Palette } from 'lucide-react'
 import { useStore } from '../store/useStore'
+import { THEMES } from '../lib/theme'
 import { cn } from '../lib/utils'
 import { readiness, allSkillEvidence, projectsSummary, completionStats, streak } from '../engine/scoring'
 import { reminders } from '../engine/priority'
@@ -50,6 +51,7 @@ const NAV = [
     { to: '/differentiation', label: 'Top 1% System', icon: Award },
     { to: '/resources', label: 'Resources', icon: Library },
     { to: '/notes', label: 'Notes', icon: StickyNote },
+    { to: '/scratchpad', label: 'Scratchpad', icon: PenLine },
     { to: '/revision', label: 'Revision', icon: Repeat, key: 'revision' },
     { to: '/catch-up', label: 'Catch-Up Mode', icon: LifeBuoy, key: 'catchup' },
     { to: '/settings', label: 'Settings', icon: Settings },
@@ -117,6 +119,23 @@ function Sidebar({ onNavigate }) {
   )
 }
 
+function ThemeButton() {
+  const theme = useStore((s) => s.settings.theme || 'midnight')
+  const setSettings = useStore((s) => s.setSettings)
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="relative">
+      <button onClick={() => setOpen(!open)} className="text-soft hover:text-ink p-1.5" title="Theme"><Palette size={18} /></button>
+      {open && (
+        <div className="absolute right-0 top-9 w-56 card p-1.5 z-50 animate-fadeIn" onMouseLeave={() => setOpen(false)}>
+          <div className="label px-2 py-1">Theme</div>
+          {THEMES.map((t) => <button key={t.id} onClick={() => { setSettings({ theme: t.id }); setOpen(false) }} className={cn('w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12.5px] hover:bg-raised', theme === t.id ? 'text-ink bg-raised' : 'text-soft')}><span className="h-4 w-4 rounded-full border border-line2 shrink-0" style={{ background: `linear-gradient(135deg, ${t.swatch[0]} 50%, ${t.swatch[1]} 50%)` }} /><span className="flex-1 text-left">{t.name}</span>{theme === t.id && <span className="text-accent-glow">✓</span>}</button>)}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function TopBar({ onMenu, onPalette }) {
   const state = useStore()
   const today = state.today()
@@ -137,6 +156,7 @@ function TopBar({ onMenu, onPalette }) {
         <span className="chip text-soft border-line2 bg-raised">{month.phase}</span>
         <span className="chip text-warn border-warn/40 bg-warn/10"><Sun size={11} />{st.current}d streak</span>
       </div>
+      <ThemeButton />
       <div className="relative">
         <button onClick={() => setOpen(!open)} className="relative text-soft hover:text-ink p-1.5"><Bell size={18} />{rems.length > 0 && <span className={cn('absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 rounded-full text-[9.5px] font-bold flex items-center justify-center', rems.some((r) => r.level === 'warn') ? 'bg-bad text-white' : 'bg-accent text-white')}>{rems.length}</span>}</button>
         {open && (

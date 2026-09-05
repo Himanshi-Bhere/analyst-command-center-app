@@ -9,7 +9,7 @@ import { startOfWeek, monthKey, addDays, fmtShort, diffDays } from '../lib/dates
 import { getMonthForDate, programWeekStart } from '../engine/tasks'
 
 export const STATUSES = ['Wishlist', 'Ready to Apply', 'Applied', 'Assessment', 'HR', 'Technical', 'Managerial', 'Follow-up', 'Offer', 'Rejected']
-const STATUS_COLOR = { Wishlist: '#7c7c92', 'Ready to Apply': '#b4b4c6', Applied: '#4fb7f5', Assessment: '#c4b5fd', HR: '#f5b544', Technical: '#fb923c', Managerial: '#e879a5', 'Follow-up': '#a99cff', Offer: '#3ddc97', Rejected: '#f06a6a' }
+const STATUS_COLOR = { Wishlist: '#7c7c92', 'Ready to Apply': '#b4b4c6', Applied: '#4fb7f5', Assessment: '#c4b5fd', HR: '#f5b544', Technical: '#fb923c', Managerial: '#e879a5', 'Follow-up': 'rgb(var(--c-accent-glow))', Offer: '#3ddc97', Rejected: '#f06a6a' }
 const DOMAINS = ['E-Commerce', 'Retail', 'Quick Commerce', 'BFSI', 'FinTech', 'GCC', 'Consulting', 'Analytics Firm', 'SaaS', 'Startup', 'Other']
 
 // ---------------- JOBS ----------------

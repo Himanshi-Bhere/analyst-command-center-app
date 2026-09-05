@@ -64,8 +64,8 @@ export default function Dashboard() {
 
       {/* KPI row */}
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
-        <KpiCard label="Today" value={`${cs.done} / ${cs.total}`} sub={`${cs.pct}% · ${hrs(cs.minsDone)} of ${hrs(cs.minsPlanned)}`} ring={cs.pct} ringColor="#7c6cf6" onClick={() => nav('/today')} />
-        <KpiCard label="This week" value={`${ws.done} / ${ws.total}`} sub={`tasks · ${ws.pct}% complete`} ring={ws.pct} ringColor="#a99cff" onClick={() => nav('/weekly')} />
+        <KpiCard label="Today" value={`${cs.done} / ${cs.total}`} sub={`${cs.pct}% · ${hrs(cs.minsDone)} of ${hrs(cs.minsPlanned)}`} ring={cs.pct} ringColor="rgb(var(--c-accent))" onClick={() => nav('/today')} />
+        <KpiCard label="This week" value={`${ws.done} / ${ws.total}`} sub={`tasks · ${ws.pct}% complete`} ring={ws.pct} ringColor="rgb(var(--c-accent-glow))" onClick={() => nav('/weekly')} />
         <KpiCard label="Roadmap Sep→Dec" value={`${rp.pct}%`} sub={`${rp.done} tasks · day ${rp.elapsed + 1}/${rp.days}`} ring={rp.pct} ringColor="#4fb7f5" onClick={() => nav('/roadmap')} />
         <KpiCard label="Readiness" value={`${r.total}`} sub={`target 85+ · gap ${Math.max(0, 85 - r.total)}`} ring={Math.round((r.total / 85) * 100)} ringColor={r.total >= 85 ? '#3ddc97' : r.total >= 50 ? '#f5b544' : '#f06a6a'} onClick={() => nav('/progress')} />
         <KpiCard label="Learning streak" value={`${st.current}d`} sub={`best ${st.best}d · ${st.activeDays} active days`} icon={Flame} />

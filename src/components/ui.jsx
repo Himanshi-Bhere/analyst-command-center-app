@@ -20,7 +20,7 @@ export function PageHeader({ eyebrow, title, subtitle, right }) {
   )
 }
 
-export function ProgressRing({ value = 0, size = 56, stroke = 5, color = '#7c6cf6', track = '#20202c', children, className }) {
+export function ProgressRing({ value = 0, size = 56, stroke = 5, color = 'rgb(var(--c-accent))', track = 'rgb(var(--c-line))', children, className }) {
   const r = (size - stroke) / 2
   const c = 2 * Math.PI * r
   const v = Math.max(0, Math.min(100, value))
@@ -35,7 +35,7 @@ export function ProgressRing({ value = 0, size = 56, stroke = 5, color = '#7c6cf
   )
 }
 
-export function Bar({ value = 0, color = '#7c6cf6', className, height = 6 }) {
+export function Bar({ value = 0, color = 'rgb(var(--c-accent))', className, height = 6 }) {
   return (
     <div className={cn('w-full bg-line rounded-full overflow-hidden', className)} style={{ height }}>
       <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.max(0, Math.min(100, value))}%`, background: color }} />
@@ -46,7 +46,7 @@ export function Bar({ value = 0, color = '#7c6cf6', className, height = 6 }) {
 export function KpiCard({ label, value, sub, ring, ringColor, icon: Icon, accent, onClick, className }) {
   return (
     <div onClick={onClick} className={cn('card p-3.5 flex items-center gap-3 min-h-[92px]', onClick && 'cursor-pointer card-hover', accent && 'border-accent/40', className)}>
-      {ring !== undefined && <ProgressRing value={ring} size={52} stroke={4.5} color={ringColor || '#7c6cf6'} />}
+      {ring !== undefined && <ProgressRing value={ring} size={52} stroke={4.5} color={ringColor || 'rgb(var(--c-accent))'} />}
       <div className="min-w-0 flex-1">
         <div className="label leading-tight">{label}</div>
         <div className="num text-[19px] font-bold leading-tight mt-0.5 text-ink break-words" title={String(value)}>{value}</div>

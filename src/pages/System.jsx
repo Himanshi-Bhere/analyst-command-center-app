@@ -1,9 +1,9 @@
 import React, { useMemo, useState, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ResponsiveContainer, BarChart, Bar as RBar, XAxis, YAxis, Tooltip, LineChart, Line, RadarChart, Radar, PolarGrid, PolarAngleAxis, CartesianGrid } from 'recharts'
-import { Plus, Trash2, ExternalLink as Ext, Download, Upload, RotateCcw, Award, CheckCircle2, ArrowRight, Wand2, Search } from 'lucide-react'
+import { Plus, Trash2, ExternalLink as Ext, Download, Upload, RotateCcw, Award, CheckCircle2, ArrowRight, Wand2, Search, Pencil } from 'lucide-react'
 import { useStore } from '../store/useStore'
-import { PageHeader, Card, Label, Bar, Chip, H2, Tabs, Field, Checkbox, ProgressRing, PriorityChip, SkillChip, Empty, Collapsible } from '../components/ui'
+import { PageHeader, Card, Label, Bar, Chip, H2, Tabs, Field, Checkbox, ProgressRing, PriorityChip, SkillChip, Empty, Collapsible, Modal } from '../components/ui'
 import TaskCard from '../components/TaskCard'
 import { READINESS_LABELS, readiness, domainReadiness, streak, weekStats, xpAndLevel, badges, differentiation, allSkillEvidence, projectsSummary, interviewStats } from '../engine/scoring'
 import { catchUpPlan } from '../engine/priority'
@@ -11,10 +11,11 @@ import { RESOURCES, NOTE_TEMPLATES } from '../data/library'
 import { SKILL_MAP, SKILL_TREE } from '../data/skills'
 import { weekStartFor, weekNumberFor } from '../engine/tasks'
 import { skillColor, cn, hrs, pct } from '../lib/utils'
+import { THEMES } from '../lib/theme'
 import { fmtShort, addDays, diffDays } from '../lib/dates'
 import { REVISION_INTERVALS } from '../store/useStore'
 
-const tip = { contentStyle: { background: '#12121a', border: '1px solid #2a2a38', borderRadius: 8, fontSize: 12 }, labelStyle: { color: '#b4b4c6' }, itemStyle: { color: '#ececf3' } }
+const tip = { contentStyle: { background: 'rgb(var(--c-card))', border: '1px solid rgb(var(--c-line2))', borderRadius: 8, fontSize: 12 }, labelStyle: { color: 'rgb(var(--c-soft))' }, itemStyle: { color: 'rgb(var(--c-ink))' } }
 const DOMAIN_LABEL = { retail: 'Retail / E-Commerce', bfsi: 'BFSI / FinTech', commercial: 'Commercial / Revenue' }
 
 // ---------------- PROGRESS ----------------
@@ -37,20 +38,20 @@ export function ProgressPage() {
       <div className="grid lg:grid-cols-3 gap-4 mb-4">
         <Card className="lg:col-span-1 border-accent/40">
           <Label>Analytics Job Readiness Score</Label>
-          <div className="flex items-center gap-4 mt-2"><ProgressRing value={Math.round((r.total / 100) * 100)} size={96} stroke={8} color={r.total >= 85 ? '#3ddc97' : r.total >= 50 ? '#f5b544' : '#7c6cf6'}><div className="text-center"><div className="num text-[26px] font-bold leading-none">{r.total}</div><div className="text-[10px] text-muted">/ 100</div></div></ProgressRing><div className="text-[12.5px] space-y-1"><div><span className="text-muted">Current</span> <span className="num font-semibold">{r.total}</span></div><div><span className="text-muted">Target</span> <span className="num font-semibold text-ok">85+</span></div><div><span className="text-muted">Gap</span> <span className="num font-semibold text-warn">{Math.max(0, 85 - r.total)} pts</span></div><div className="text-muted">{diffDays(today, '2026-12-31')} days to Dec 31</div></div></div>
+          <div className="flex items-center gap-4 mt-2"><ProgressRing value={Math.round((r.total / 100) * 100)} size={96} stroke={8} color={r.total >= 85 ? '#3ddc97' : r.total >= 50 ? '#f5b544' : 'rgb(var(--c-accent))'}><div className="text-center"><div className="num text-[26px] font-bold leading-none">{r.total}</div><div className="text-[10px] text-muted">/ 100</div></div></ProgressRing><div className="text-[12.5px] space-y-1"><div><span className="text-muted">Current</span> <span className="num font-semibold">{r.total}</span></div><div><span className="text-muted">Target</span> <span className="num font-semibold text-ok">85+</span></div><div><span className="text-muted">Gap</span> <span className="num font-semibold text-warn">{Math.max(0, 85 - r.total)} pts</span></div><div className="text-muted">{diffDays(today, '2026-12-31')} days to Dec 31</div></div></div>
           <div className="mt-4"><Label>Why is my score {r.total}?</Label>
             <div className="mt-2 space-y-1.5">{r.breakdown.map((b) => <div key={b.key}><div className="flex justify-between text-[12px]"><span className="text-soft">{READINESS_LABELS[b.key] || b.key} <span className="text-muted">({b.weight}%)</span></span><span className="num"><span className="text-ink">{b.contrib}</span><span className="text-muted"> / {b.max} · −{b.gap}</span></span></div><Bar value={b.score} color={skillColor(b.key)} className="mt-0.5" height={4} /></div>)}</div>
             <div className="text-[11.5px] text-muted mt-2">Biggest lever: <span className="text-ink">{READINESS_LABELS[r.breakdown[0].key]}</span> — closing it fully adds +{r.breakdown[0].gap} pts.</div>
           </div>
         </Card>
-        <Card><Label>Skill radar (evidence score)</Label><div className="h-[260px] mt-1"><ResponsiveContainer><RadarChart data={radar} outerRadius="75%"><PolarGrid stroke="#2a2a38" /><PolarAngleAxis dataKey="skill" tick={{ fill: '#b4b4c6', fontSize: 11 }} /><Radar dataKey="v" stroke="#7c6cf6" fill="#7c6cf6" fillOpacity={0.3} /><Tooltip {...tip} /></RadarChart></ResponsiveContainer></div>
+        <Card><Label>Skill radar (evidence score)</Label><div className="h-[260px] mt-1"><ResponsiveContainer><RadarChart data={radar} outerRadius="75%"><PolarGrid stroke="rgb(var(--c-line2))" /><PolarAngleAxis dataKey="skill" tick={{ fill: '#b4b4c6', fontSize: 11 }} /><Radar dataKey="v" stroke="rgb(var(--c-accent))" fill="rgb(var(--c-accent))" fillOpacity={0.3} /><Tooltip {...tip} /></RadarChart></ResponsiveContainer></div>
           <Label className="mt-1">Domain readiness</Label><div className="mt-1 space-y-1.5">{['retail', 'commercial', 'bfsi'].map((k) => <div key={k}><div className="flex justify-between text-[12px]"><span className="text-soft">{DOMAIN_LABEL[k]}</span><span className="num">{dr[k]}%</span></div><Bar value={dr[k]} color={skillColor(k)} className="mt-0.5" height={4} /></div>)}</div><div className="text-[11.5px] text-muted mt-2">Fastest route to interview-ready: <span className="text-ink">{DOMAIN_LABEL[dr.best]}</span>.</div></Card>
-        <Card><Label>Hours & completion per week</Label><div className="h-[220px] mt-1"><ResponsiveContainer><BarChart data={weekly}><CartesianGrid stroke="#20202c" vertical={false} /><XAxis dataKey="week" tick={{ fill: '#7c7c92', fontSize: 11 }} /><YAxis tick={{ fill: '#7c7c92', fontSize: 11 }} width={28} /><Tooltip {...tip} /><RBar dataKey="hours" name="Hours" fill="#7c6cf6" radius={[3, 3, 0, 0]} /><RBar dataKey="tasks" name="Tasks %" fill="#3ddc97" radius={[3, 3, 0, 0]} /></BarChart></ResponsiveContainer></div>
+        <Card><Label>Hours & completion per week</Label><div className="h-[220px] mt-1"><ResponsiveContainer><BarChart data={weekly}><CartesianGrid stroke="rgb(var(--c-line))" vertical={false} /><XAxis dataKey="week" tick={{ fill: 'rgb(var(--c-muted))', fontSize: 11 }} /><YAxis tick={{ fill: 'rgb(var(--c-muted))', fontSize: 11 }} width={28} /><Tooltip {...tip} /><RBar dataKey="hours" name="Hours" fill="rgb(var(--c-accent))" radius={[3, 3, 0, 0]} /><RBar dataKey="tasks" name="Tasks %" fill="#3ddc97" radius={[3, 3, 0, 0]} /></BarChart></ResponsiveContainer></div>
           <div className="grid grid-cols-3 gap-2 mt-2 text-[12px]"><div className="bg-raised/60 border border-line rounded-md p-2"><Label>Streak</Label><div className="num font-semibold">{st.current}d <span className="text-muted">/ best {st.best}</span></div></div><div className="bg-raised/60 border border-line rounded-md p-2"><Label>Active days</Label><div className="num font-semibold">{st.activeDays}</div></div><div className="bg-raised/60 border border-line rounded-md p-2"><Label>Consistency</Label><div className="num font-semibold">{pct(st.activeDays, Math.max(1, diffDays('2026-08-31', today) + 1))}%</div></div></div></Card>
       </div>
       <div className="grid lg:grid-cols-3 gap-4 mb-4">
-        <Card><Label>SQL accuracy (last 20 sessions)</Label>{sqlAcc.length ? <div className="h-[160px] mt-1"><ResponsiveContainer><LineChart data={sqlAcc}><CartesianGrid stroke="#20202c" vertical={false} /><XAxis dataKey="date" tick={{ fill: '#7c7c92', fontSize: 10 }} /><YAxis domain={[0, 100]} tick={{ fill: '#7c7c92', fontSize: 10 }} width={28} /><Tooltip {...tip} /><Line type="monotone" dataKey="acc" name="Accuracy %" stroke="#7c6cf6" strokeWidth={2} dot={{ r: 2 }} /></LineChart></ResponsiveContainer></div> : <div className="text-muted text-[12.5px] py-8 text-center">Log SQL sessions on the SQL page to see accuracy trend.</div>}</Card>
-        <Card><Label>Aptitude accuracy (last 20 sessions)</Label>{aptAcc.length ? <div className="h-[160px] mt-1"><ResponsiveContainer><LineChart data={aptAcc}><CartesianGrid stroke="#20202c" vertical={false} /><XAxis dataKey="date" tick={{ fill: '#7c7c92', fontSize: 10 }} /><YAxis domain={[0, 100]} tick={{ fill: '#7c7c92', fontSize: 10 }} width={28} /><Tooltip {...tip} /><Line type="monotone" dataKey="acc" name="Accuracy %" stroke="#c4b5fd" strokeWidth={2} dot={{ r: 2 }} /></LineChart></ResponsiveContainer></div> : <div className="text-muted text-[12.5px] py-8 text-center">Log aptitude sessions to see the trend vs the 80% benchmark.</div>}</Card>
+        <Card><Label>SQL accuracy (last 20 sessions)</Label>{sqlAcc.length ? <div className="h-[160px] mt-1"><ResponsiveContainer><LineChart data={sqlAcc}><CartesianGrid stroke="rgb(var(--c-line))" vertical={false} /><XAxis dataKey="date" tick={{ fill: 'rgb(var(--c-muted))', fontSize: 10 }} /><YAxis domain={[0, 100]} tick={{ fill: 'rgb(var(--c-muted))', fontSize: 10 }} width={28} /><Tooltip {...tip} /><Line type="monotone" dataKey="acc" name="Accuracy %" stroke="rgb(var(--c-accent))" strokeWidth={2} dot={{ r: 2 }} /></LineChart></ResponsiveContainer></div> : <div className="text-muted text-[12.5px] py-8 text-center">Log SQL sessions on the SQL page to see accuracy trend.</div>}</Card>
+        <Card><Label>Aptitude accuracy (last 20 sessions)</Label>{aptAcc.length ? <div className="h-[160px] mt-1"><ResponsiveContainer><LineChart data={aptAcc}><CartesianGrid stroke="rgb(var(--c-line))" vertical={false} /><XAxis dataKey="date" tick={{ fill: 'rgb(var(--c-muted))', fontSize: 10 }} /><YAxis domain={[0, 100]} tick={{ fill: 'rgb(var(--c-muted))', fontSize: 10 }} width={28} /><Tooltip {...tip} /><Line type="monotone" dataKey="acc" name="Accuracy %" stroke="#c4b5fd" strokeWidth={2} dot={{ r: 2 }} /></LineChart></ResponsiveContainer></div> : <div className="text-muted text-[12.5px] py-8 text-center">Log aptitude sessions to see the trend vs the 80% benchmark.</div>}</Card>
         <Card><Label>Project progress</Label><div className="mt-2 space-y-2">{r.projects.map((p) => <div key={p.id}><div className="flex justify-between text-[12.5px]"><span className="text-soft">{p.code} · {p.name}</span><span className="num">{p.pct}%</span></div><Bar value={p.pct} color={p.color} className="mt-1" /></div>)}</div><Label className="mt-4">Interview conversion</Label><div className="text-[12.5px] text-soft mt-1">{r.iv.strong} strong / {r.iv.rated} rated / {r.iv.total} total · avg {r.iv.avg.toFixed(1)}</div></Card>
       </div>
       <Card><div className="flex items-center gap-2 mb-2"><Award size={14} className="text-warn" /><H2>Milestones & badges</H2><span className="text-[12px] text-muted">{bd.filter((b) => b.earned).length}/{bd.length}</span></div><div className="grid sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-2">{bd.map((b) => <div key={b.id} className={cn('border rounded-md p-2.5', b.earned ? 'border-warn/40 bg-warn/5' : 'border-line bg-raised/30 opacity-60')}><div className="flex items-center gap-1.5 text-[12.5px] font-semibold">{b.earned ? <CheckCircle2 size={12} className="text-warn" /> : <Award size={12} className="text-muted" />}{b.name}</div><div className="text-[11px] text-muted mt-0.5">{b.desc}</div></div>)}</div></Card>
@@ -111,30 +112,67 @@ export function NotesPage() {
   const { addNote, updateNote, removeNote } = state
   const [sp] = useSearchParams()
   const [q, setQ] = useState(sp.get('q') || '')
-  const [tpl, setTpl] = useState('all')
-  const [add, setAdd] = useState(false)
-  const blank = { template: 'Business Metric', title: '', formula: '', domain: 'E-Commerce', interp: '', iq: '', body: '' }
-  const [f, setF] = useState(blank)
+  const [cat, setCat] = useState('all')
+  const [editing, setEditing] = useState(null) // null | 'new' | note object
   useEffect(() => { if (sp.get('q')) setQ(sp.get('q')) }, [sp])
-  const list = state.notes.filter((n) => (tpl === 'all' || n.template === tpl) && (!q || (n.title + ' ' + n.formula + ' ' + n.interp + ' ' + (n.body || '')).toLowerCase().includes(q.toLowerCase())))
+  const text = (n) => [n.interp, n.body].filter(Boolean).join('\n\n')
+  const list = state.notes.filter((n) => (cat === 'all' || n.template === cat) && (!q || (n.title + ' ' + (n.formula || '') + ' ' + text(n) + ' ' + (n.iq || '')).toLowerCase().includes(q.toLowerCase())))
   return (
     <div>
-      <PageHeader eyebrow="System" title="Analytics Knowledge Vault" subtitle="Metric → formula → business interpretation → interview question. Writing it in your own words is the 'Explain' step." right={<button className="btn-primary btn-xs" onClick={() => setAdd(!add)}><Plus size={12} />New note</button>} />
-      {add && (
-        <Card className="mb-4 border-accent/40"><div className="grid sm:grid-cols-3 gap-3">
-          <Field label="Template"><select className="input" value={f.template} onChange={(e) => setF({ ...f, template: e.target.value })}>{NOTE_TEMPLATES.map((t) => <option key={t}>{t}</option>)}</select></Field>
-          <Field label="Title / metric" className="sm:col-span-2"><input className="input" value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} placeholder="Average Order Value" /></Field>
-          <Field label="Formula / syntax" className="sm:col-span-2"><input className="input font-mono" value={f.formula} onChange={(e) => setF({ ...f, formula: e.target.value })} placeholder="Revenue / Orders" /></Field>
-          <Field label="Used for / domain"><select className="input" value={f.domain} onChange={(e) => setF({ ...f, domain: e.target.value })}>{['E-Commerce', 'BFSI', 'Commercial', 'SQL', 'Power BI', 'Excel', 'Statistics', 'General'].map((t) => <option key={t}>{t}</option>)}</select></Field>
-          <Field label="Business interpretation" className="sm:col-span-3"><textarea rows={2} className="input" value={f.interp} onChange={(e) => setF({ ...f, interp: e.target.value })} /></Field>
-          <Field label="Interview question" className="sm:col-span-2"><input className="input" value={f.iq} onChange={(e) => setF({ ...f, iq: e.target.value })} /></Field>
-          <Field label="Extra notes"><input className="input" value={f.body} onChange={(e) => setF({ ...f, body: e.target.value })} /></Field>
-        </div><div className="flex justify-end gap-2 mt-3"><button className="btn-ghost" onClick={() => setAdd(false)}>Cancel</button><button className="btn-primary" disabled={!f.title} onClick={() => { addNote(f); setF(blank); setAdd(false) }}>Save note</button></div></Card>
-      )}
-      <div className="flex flex-wrap items-center gap-2 mb-3"><Tabs tabs={[{ key: 'all', label: `All (${state.notes.length})` }, ...NOTE_TEMPLATES.map((t) => ({ key: t, label: t }))]} value={tpl} onChange={setTpl} className="flex-1" /><div className="relative"><Search size={13} className="absolute left-2 top-2.5 text-muted" /><input className="input pl-7 py-1.5 w-48" placeholder="Search vault…" value={q} onChange={(e) => setQ(e.target.value)} /></div></div>
-      <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-3">{list.map((n) => <Card key={n.id}><div className="flex items-start justify-between gap-2"><div><Chip className="text-muted border-line2 bg-raised">{n.template}</Chip><div className="text-[14px] font-semibold mt-1">{n.title}</div></div><button className="text-muted hover:text-bad" onClick={() => removeNote(n.id)}><Trash2 size={12} /></button></div>{n.formula && <div className="font-mono text-[12px] text-accent-glow mt-1.5 bg-raised/60 border border-line rounded px-2 py-1">{n.formula}</div>}<div className="text-[12px] mt-2 space-y-1"><div><span className="text-muted">Used for:</span> <span className="text-soft">{n.domain}</span></div>{n.interp && <div><span className="text-muted">Interpretation:</span> <span className="text-soft">{n.interp}</span></div>}{n.iq && <div><span className="text-muted">Interview:</span> <span className="text-ink">{n.iq}</span></div>}{n.body && <div className="text-soft">{n.body}</div>}</div></Card>)}</div>
-      {!list.length && <Empty text="No notes match." />}
+      <PageHeader eyebrow="System" title="Notes" subtitle="Your own words, in one place. Writing a concept down is the 'Explain' step — keep it short." right={<button className="btn-primary btn-xs" onClick={() => setEditing('new')}><Plus size={12} />New note</button>} />
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <div className="relative flex-1 min-w-[200px]"><Search size={13} className="absolute left-2.5 top-2.5 text-muted" /><input className="input pl-8 py-1.5 w-full" placeholder="Search notes…" value={q} onChange={(e) => setQ(e.target.value)} /></div>
+        <select className="input py-1.5 w-auto" value={cat} onChange={(e) => setCat(e.target.value)}><option value="all">All categories ({state.notes.length})</option>{NOTE_TEMPLATES.map((t) => <option key={t} value={t}>{t} ({state.notes.filter((n) => n.template === t).length})</option>)}</select>
+      </div>
+      <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-3">
+        {list.map((n) => (
+          <Card key={n.id} className="flex flex-col cursor-pointer hover:border-line2 transition-colors" onClick={() => setEditing(n)}>
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0"><Chip className="text-muted border-line2 bg-raised">{n.template}</Chip><div className="text-[14px] font-semibold mt-1.5 leading-snug">{n.title}</div></div>
+              <div className="flex gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                <button className="btn-ghost btn-xs" title="Edit" onClick={() => setEditing(n)}><Pencil size={12} />Edit</button>
+                <button className="text-muted hover:text-bad p-1" title="Delete" onClick={() => { if (confirm(`Delete "${n.title}"?`)) removeNote(n.id) }}><Trash2 size={12} /></button>
+              </div>
+            </div>
+            {n.formula && <pre className="mt-2 text-[12px] font-mono text-accent-glow bg-raised border border-line rounded-md px-2.5 py-2 whitespace-pre-wrap break-words">{n.formula}</pre>}
+            {text(n) && <div className="text-[12.5px] text-soft mt-2 whitespace-pre-wrap line-clamp-4">{text(n)}</div>}
+            {n.iq && <div className="text-[12px] text-muted mt-2 pt-2 border-t border-line"><span className="text-warn">Interview:</span> {n.iq}</div>}
+          </Card>
+        ))}
+      </div>
+      {!list.length && <Empty text={state.notes.length ? 'No notes match your search.' : 'No notes yet.'} action={<button className="btn-primary btn-xs" onClick={() => setEditing('new')}><Plus size={12} />Write your first note</button>} />}
+      {editing && <NoteEditor note={editing === 'new' ? null : editing} onClose={() => setEditing(null)} onSave={(data) => { if (editing === 'new') addNote(data); else updateNote(editing.id, data); setEditing(null) }} onDelete={editing !== 'new' ? () => { if (confirm(`Delete "${editing.title}"?`)) { removeNote(editing.id); setEditing(null) } } : null} />}
     </div>
+  )
+}
+
+function NoteEditor({ note, onClose, onSave, onDelete }) {
+  const [f, setF] = useState({ template: note?.template || 'SQL Concept', title: note?.title || '', text: [note?.interp, note?.body].filter(Boolean).join('\n\n'), formula: note?.formula || '', iq: note?.iq || '', domain: note?.domain || 'General' })
+  const [more, setMore] = useState(!!(note?.formula || note?.iq))
+  const set = (k) => (e) => setF({ ...f, [k]: e.target.value })
+  const save = () => onSave({ template: f.template, title: f.title.trim(), interp: f.text.trim(), body: '', formula: f.formula.trim(), iq: f.iq.trim(), domain: f.domain })
+  return (
+    <Modal open onClose={onClose} title={note ? 'Edit note' : 'New note'} wide>
+      <div className="p-4 space-y-3">
+        <div className="grid sm:grid-cols-3 gap-3">
+          <Field label="Title" className="sm:col-span-2"><input className="input" autoFocus value={f.title} onChange={set('title')} placeholder="e.g. What is a CTE?" /></Field>
+          <Field label="Category"><select className="input" value={f.template} onChange={set('template')}>{NOTE_TEMPLATES.map((t) => <option key={t}>{t}</option>)}</select></Field>
+        </div>
+        <Field label="Notes"><textarea rows={8} className="input text-[13px] leading-relaxed" value={f.text} onChange={set('text')} placeholder="Write it in your own words. What it is, when to use it, one example." /></Field>
+        <button className="text-[12px] text-accent-glow" onClick={() => setMore(!more)}>{more ? '− Hide' : '+ Add'} formula / interview question (optional)</button>
+        {more && (
+          <div className="grid sm:grid-cols-3 gap-3 animate-fadeIn">
+            <Field label="Formula / syntax" className="sm:col-span-2"><input className="input font-mono" value={f.formula} onChange={set('formula')} placeholder="SELECT … FROM … WHERE …" /></Field>
+            <Field label="Used for"><select className="input" value={f.domain} onChange={set('domain')}>{['General', 'SQL', 'Power BI', 'Excel', 'Statistics', 'Python', 'E-Commerce', 'BFSI', 'Commercial'].map((t) => <option key={t}>{t}</option>)}</select></Field>
+            <Field label="Interview question this answers" className="sm:col-span-3"><input className="input" value={f.iq} onChange={set('iq')} placeholder="e.g. Difference between WHERE and HAVING?" /></Field>
+          </div>
+        )}
+        <div className="flex items-center justify-between pt-2 border-t border-line">
+          {onDelete ? <button className="btn-danger btn-xs" onClick={onDelete}><Trash2 size={11} />Delete</button> : <span />}
+          <div className="flex gap-2"><button className="btn-ghost" onClick={onClose}>Cancel</button><button className="btn-primary" disabled={!f.title.trim()} onClick={save}>Save</button></div>
+        </div>
+      </div>
+    </Modal>
   )
 }
 
@@ -225,6 +263,9 @@ export function SettingsPage() {
     <div>
       <PageHeader eyebrow="System" title="Settings" subtitle="Profile, workload, links, and data. Everything is persisted in this browser's localStorage — export a backup regularly." />
       <div className="grid lg:grid-cols-2 gap-4">
+        <Card><H2>Appearance</H2><div className="text-[12.5px] text-muted mt-1">Pick a theme. Applies instantly and is remembered on this device.</div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-3">{THEMES.map((t) => <button key={t.id} onClick={() => setSettings({ theme: t.id })} className={cn('text-left rounded-lg border p-2.5 transition-colors', (s.theme || 'midnight') === t.id ? 'border-accent/70 bg-accent/10' : 'border-line hover:border-line2')}><div className="flex items-center gap-2"><span className="h-6 w-6 rounded-md border border-line2 shrink-0" style={{ background: `linear-gradient(135deg, ${t.swatch[0]} 50%, ${t.swatch[1]} 50%)` }} /><div><div className="text-[13px] font-medium">{t.name}</div><div className="text-[11px] text-muted">{t.desc}</div></div></div></button>)}</div>
+        </Card>
         <Card><H2>Profile & workload</H2><div className="grid sm:grid-cols-2 gap-3 mt-3"><Field label="Name"><input className="input" value={s.name} onChange={(e) => setSettings({ name: e.target.value })} /></Field><Field label="Title"><input className="input" value={s.title} onChange={(e) => setSettings({ title: e.target.value })} /></Field><Field label="Weekly hours target"><input type="number" className="input" value={s.weeklyHours} onChange={(e) => setSettings({ weeklyHours: +e.target.value })} /></Field><Field label="Daily catch-up cap (min)"><input type="number" className="input" value={s.dailyCatchUpCap} onChange={(e) => setSettings({ dailyCatchUpCap: +e.target.value })} /></Field><Field label="Program start date — Week 1, Day 1 (nothing is scheduled before it)"><input type="date" className="input" value={s.startedOn || ''} onChange={(e) => setSettings({ startedOn: e.target.value })} /></Field><Field label="Simulate date (blank = real today)"><input type="date" className="input" value={s.todayOverride} onChange={(e) => setSettings({ todayOverride: e.target.value })} /><div className="text-[11px] text-muted mt-1">Useful to preview future weeks or test Catch-Up Mode. Clear it for daily use.</div></Field></div></Card>
         <Card><H2>Links</H2><div className="space-y-3 mt-3">{[['github', 'GitHub profile'], ['linkedin', 'LinkedIn profile'], ['portfolio', 'Portfolio / NovyPro']].map(([k, l]) => <Field key={k} label={l}><input className="input" value={links[k] || ''} onChange={(e) => setLinks({ ...links, [k]: e.target.value })} onBlur={() => setSettings({ links })} /></Field>)}</div></Card>
         <Card><H2>Data</H2><div className="text-[12.5px] text-muted mt-1">Stored locally ({size} KB). Refreshing never loses progress. To move between devices, export and import.</div><div className="flex flex-wrap gap-2 mt-3"><button className="btn-subtle" onClick={() => { const blob = new Blob([exportState()], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `analyst-command-center-${state.today()}.json`; a.click() }}><Download size={13} />Export backup</button><label className="btn-subtle cursor-pointer"><Upload size={13} />Import backup<input type="file" accept="application/json" className="hidden" onChange={(e) => { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { try { importState(r.result); alert('Imported.') } catch { alert('Invalid file') } }; r.readAsText(f) }} /></label><button className="btn-danger" onClick={() => { if (confirm('Reset ALL progress? This cannot be undone.')) resetAll() }}><RotateCcw size={13} />Reset everything</button></div></Card>

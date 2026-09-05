@@ -150,7 +150,7 @@ export function GithubPage() {
             <div className="text-[12px] text-muted mt-0.5">{r.desc}</div>
             <input className="input mt-2 text-[12px]" placeholder="https://github.com/you/repo" value={s.url || ''} onChange={(e) => setRepo(r.id, { url: e.target.value })} />
             <div className="grid grid-cols-2 gap-1 mt-2">{r.checklist.map((c) => <Checkbox key={c} label={c} checked={s.checklist?.[c]} onChange={() => toggleRepoItem(r.id, c)} />)}</div>
-            <Bar value={Math.round((done / r.checklist.length) * 100)} className="mt-3" color="#a99cff" />
+            <Bar value={Math.round((done / r.checklist.length) * 100)} className="mt-3" color="rgb(var(--c-accent-glow))" />
           </Card>
         ) })}
       </div>

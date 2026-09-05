@@ -14,6 +14,7 @@ const initial = {
     todayOverride: '', // for testing / travelling — blank = real date
     startedOn: DEFAULT_PROGRAM_START, // tasks before this date are never 'overdue'
     links: { github: 'https://github.com/', linkedin: 'https://www.linkedin.com/in/', portfolio: '' },
+    theme: 'midnight',
   },
   taskState: {}, // id → { status, completedOn, startedAt, estMin }
   taskOverrides: {}, // id → { date, origDate }
@@ -33,6 +34,7 @@ const initial = {
   customCompanies: [],
   resources: {}, // rid → status
   notes: SEED_NOTES,
+  scratch: [], // random notes: { id, text, tags, pinned, createdAt, updatedAt }
   revision: [], // { id, title, category, detail, step, nextReview, createdAt, history: [] }
   weeklyReviews: {}, // weekStart → { achieved, hardest, moveNext, improved, weak, mistake, priority }
   monthlyReviews: {},
@@ -101,6 +103,9 @@ export const useStore = create(persist((set, get) => ({
   addNote: (n) => set((s) => ({ notes: [{ id: 'n-' + uid(), createdAt: get().today(), tags: [], ...n }, ...s.notes] })),
   updateNote: (id, patch) => set((s) => ({ notes: s.notes.map((n) => (n.id === id ? { ...n, ...patch } : n)) })),
   removeNote: (id) => set((s) => ({ notes: s.notes.filter((n) => n.id !== id) })),
+  addScratch: (n) => { const id = 's-' + uid(); set((s) => ({ scratch: [{ id, text: '', tags: [], pinned: false, createdAt: get().today(), updatedAt: Date.now(), ...n }, ...(s.scratch || [])] })); return id },
+  updateScratch: (id, patch) => set((s) => ({ scratch: (s.scratch || []).map((n) => (n.id === id ? { ...n, ...patch, updatedAt: Date.now() } : n)) })),
+  removeScratch: (id) => set((s) => ({ scratch: (s.scratch || []).filter((n) => n.id !== id) })),
 
   // ---- revision (spaced repetition) ----
   addRevision: (r) => set((s) => { const today = get().today(); return { revision: [{ id: 'rv-' + uid(), step: 0, createdAt: today, nextReview: addDays(today, 1), history: [], ...r }, ...s.revision] } }),
@@ -121,10 +126,12 @@ export const useStore = create(persist((set, get) => ({
   resetAll: () => set({ ...initial }),
 }), {
   name: 'acc-state-v1',
-  version: 3,
+  version: 4,
   migrate: (persisted) => {
     if (persisted?.settings?.name === 'Vedant') persisted.settings.name = 'Himanshi'
     if (persisted?.settings && (!persisted.settings.startedOn || persisted.settings.startedOn < DEFAULT_PROGRAM_START)) persisted.settings.startedOn = DEFAULT_PROGRAM_START
+    if (persisted && !Array.isArray(persisted.scratch)) persisted.scratch = []
+    if (persisted?.settings && !persisted.settings.theme) persisted.settings.theme = 'midnight'
     return persisted
   },
   storage: createJSONStorage(() => localStorage),
@@ -136,3 +143,7 @@ export const REVISION_INTERVALS = REVISION_STEPS
 // Keep the roadmap anchor in sync with the user's start date (Week 1, Day 1)
 setProgramStart(useStore.getState().settings?.startedOn)
 useStore.subscribe((s, prev) => { if (s.settings?.startedOn !== prev.settings?.startedOn) setProgramStart(s.settings?.startedOn) })
+
+import { applyTheme } from '../lib/theme'
+applyTheme(useStore.getState().settings?.theme)
+useStore.subscribe((s, prev) => { if (s.settings?.theme !== prev.settings?.theme) applyTheme(s.settings?.theme) })
