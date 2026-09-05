@@ -3,6 +3,7 @@ import React, { useMemo, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Plus, Check, AlertTriangle } from 'lucide-react'
 import { useStore } from '../store/useStore'
+import TopicTable from '../components/TopicTable'
 import { PageHeader, Card, Label, Bar, Chip, H2, Checkbox, Field, Confidence, Stepper, Collapsible, Tabs } from '../components/ui'
 import { SKILL_MAP, LEVELS } from '../data/skills'
 import { STATS_CONCEPTS, RESOURCES } from '../data/library'
@@ -21,7 +22,7 @@ export function StatisticsPage() {
     <div>
       <PageHeader eyebrow="Learning" title="Statistics for Analysts" subtitle="Interpretation over memorization. For every concept: what it means, the formula, when analysts use it, a business example, and the interview question." right={<Chip color="#4fb7f5">{ev.levelName} · {ev.score}%</Chip>} />
       <div className="grid lg:grid-cols-3 gap-4 mb-4">
-        <Card className="lg:col-span-2"><H2>Concept tracker</H2><div className="mt-2 grid sm:grid-cols-2 gap-2">{SKILL_MAP.statistics.topics.map((t) => <Checkbox key={t.id} label={t.name} sub={`Week ${t.week}`} checked={state.topics[t.id]} onChange={() => toggleTopic(t.id)} />)}</div></Card>
+        <div className="lg:col-span-2"><TopicTable topics={SKILL_MAP.statistics.topics} /></div>
         <Card><H2>Evidence</H2><div className="mt-2 space-y-2">{ev.checks.map((c) => <div key={c.key}><div className="flex justify-between text-[12px]"><span className="text-soft">{c.label}</span>{!c.bool && c.key !== 'concepts' && <button className="text-accent-glow" onClick={() => addEvidence('statistics', c.key, 1)}>+1</button>}{c.bool && <button className="text-accent-glow" onClick={() => addEvidence('statistics', c.key, !c.ok)}>{c.ok ? 'passed' : 'mark'}</button>}</div><Bar value={c.progress} color="#4fb7f5" className="mt-1" height={4} /></div>)}</div></Card>
       </div>
       <div className="grid md:grid-cols-2 gap-3">
@@ -178,13 +179,13 @@ export function DomainPage() {
         <Card className="lg:col-span-2">
           <H2>Metric stack — {ev.topicsDone} / {skill.topics.length}</H2>
           <div className="text-[12px] text-muted mb-2">Tick when you can define, compute in SQL, and interpret each group in business terms.</div>
-          <div className="grid sm:grid-cols-2 gap-2">{skill.topics.map((t) => <Checkbox key={t.id} label={t.name} checked={state.topics[t.id]} onChange={() => toggleTopic(t.id)} />)}</div>
         </Card>
         <Card>
           <H2>Evidence</H2>
           <div className="mt-2 space-y-2">{ev.checks.map((c) => <div key={c.key}><div className="flex justify-between text-[12px]"><span className="text-soft">{c.label}</span>{!c.bool && c.key !== 'concepts' && <button className="text-accent-glow" onClick={() => addEvidence(id, c.key, 1)}>+1</button>}{c.bool && <button className="text-accent-glow" onClick={() => addEvidence(id, c.key, !c.ok)}>{c.ok ? 'done' : 'mark'}</button>}</div><Bar value={c.progress} color={skillColor(id)} className="mt-1" height={4} /></div>)}</div>
           <Link to={`/projects/${meta.project}`} className="btn-subtle w-full justify-center mt-3">Open {meta.project.toUpperCase()} project</Link>
         </Card>
+        <div className="lg:col-span-3"><TopicTable topics={skill.topics} /></div>
       </div>
       <div className="grid lg:grid-cols-2 gap-4">
         <Card>

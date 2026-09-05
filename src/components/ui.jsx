@@ -3,7 +3,7 @@ import { cn, priorityColor, skillColor } from '../lib/utils'
 import { SKILL_MAP } from '../data/skills'
 import { X } from 'lucide-react'
 
-export const Card = ({ className, children, ...p }) => <div className={cn('card p-4', className)} {...p}>{children}</div>
+export const Card = ({ className, children, ...p }) => <div className={cn('card p-5', className)} {...p}>{children}</div>
 export const Label = ({ children, className }) => <div className={cn('label', className)}>{children}</div>
 export const H2 = ({ children, className }) => <h2 className={cn('text-[15px] font-semibold text-ink tracking-tight', className)}>{children}</h2>
 
@@ -45,7 +45,7 @@ export function Bar({ value = 0, color = 'rgb(var(--c-accent))', className, heig
 
 export function KpiCard({ label, value, sub, ring, ringColor, icon: Icon, accent, onClick, className }) {
   return (
-    <div onClick={onClick} className={cn('card p-3.5 flex items-center gap-3 min-h-[92px]', onClick && 'cursor-pointer card-hover', accent && 'border-accent/40', className)}>
+    <div onClick={onClick} className={cn('card p-4 flex items-center gap-3 min-h-[92px]', onClick && 'cursor-pointer card-hover', className)}>
       {ring !== undefined && <ProgressRing value={ring} size={52} stroke={4.5} color={ringColor || 'rgb(var(--c-accent))'} />}
       <div className="min-w-0 flex-1">
         <div className="label leading-tight">{label}</div>

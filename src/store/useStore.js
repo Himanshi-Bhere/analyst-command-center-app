@@ -14,12 +14,13 @@ const initial = {
     todayOverride: '', // for testing / travelling — blank = real date
     startedOn: DEFAULT_PROGRAM_START, // tasks before this date are never 'overdue'
     links: { github: 'https://github.com/', linkedin: 'https://www.linkedin.com/in/', portfolio: '' },
-    theme: 'midnight',
+    theme: 'clean',
   },
   taskState: {}, // id → { status, completedOn, startedAt, estMin }
   taskOverrides: {}, // id → { date, origDate }
   customTasks: [], // { id, title, skill, topic, type, difficulty, estMin, resource, date, why }
-  topics: {}, // topicId → true
+  topics: {},
+  topicStages: {}, // topicId → true
   evidence: {}, // skill → { problems, business, interview, project, timed, explain }
   sqlLog: [], // { date, platform, easy, medium, hard, correct, minutes }
   aptitude: { solved: 0, correct: 0, minutes: 0, log: [] }, // log: {date, category, solved, correct, minutes}
@@ -68,7 +69,16 @@ export const useStore = create(persist((set, get) => ({
   logHours: (date, minutes) => set((s) => ({ hoursLog: { ...s.hoursLog, [date]: (s.hoursLog[date] || 0) + minutes } })),
 
   // ---- skills ----
-  toggleTopic: (id) => set((s) => ({ topics: { ...s.topics, [id]: !s.topics[id] } })),
+  toggleTopic: (id) => set((s) => { const v = !s.topics[id]; return { topics: { ...s.topics, [id]: v }, topicStages: { ...(s.topicStages || {}), [id]: { ...((s.topicStages || {})[id] || {}), learn: v } } } }),
+  // 5-stage tracker per topic: learn → practice → build → revise → ready. 'learn' mirrors topics[id] so scoring stays compatible.
+  setTopicStage: (id, stage, val) => set((s) => {
+    const cur = { ...(((s.topicStages || {})[id]) || {}) }
+    cur[stage] = val
+    const out = { topicStages: { ...(s.topicStages || {}), [id]: cur } }
+    if (stage === 'learn') out.topics = { ...s.topics, [id]: val }
+    else if (val && !s.topics[id]) { out.topics = { ...s.topics, [id]: true }; cur.learn = true }
+    return out
+  }),
   addEvidence: (skill, key, delta) => set((s) => { const e = { ...(s.evidence[skill] || {}) }; e[key] = typeof delta === 'boolean' ? delta : Math.max(0, (e[key] || 0) + delta); return { evidence: { ...s.evidence, [skill]: e } } }),
   logSql: (entry) => set((s) => {
     const n = (entry.easy || 0) + (entry.medium || 0) + (entry.hard || 0)
@@ -126,12 +136,13 @@ export const useStore = create(persist((set, get) => ({
   resetAll: () => set({ ...initial }),
 }), {
   name: 'acc-state-v1',
-  version: 5,
+  version: 6,
   migrate: (persisted) => {
     if (persisted?.settings?.name === 'Vedant') persisted.settings.name = 'Himanshi'
     if (persisted?.settings && (!persisted.settings.startedOn || persisted.settings.startedOn < DEFAULT_PROGRAM_START)) persisted.settings.startedOn = DEFAULT_PROGRAM_START
     if (persisted && !Array.isArray(persisted.scratch)) persisted.scratch = []
-    if (persisted?.settings && !['midnight', 'aurora', 'paper', 'neon'].includes(persisted.settings.theme)) persisted.settings.theme = persisted.settings.theme === 'light' ? 'paper' : 'midnight'
+    if (persisted?.settings && !['clean', 'midnight', 'aurora', 'paper', 'neon'].includes(persisted.settings.theme)) persisted.settings.theme = persisted.settings.theme === 'light' ? 'paper' : 'clean'
+    if (persisted?.settings && persisted.settings.theme === 'midnight' && !persisted.settings.themeChosen) persisted.settings.theme = 'clean'
     return persisted
   },
   storage: createJSONStorage(() => localStorage),

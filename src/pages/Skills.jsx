@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Timer, Play, Square, Check, Plus, Lock, Unlock, ExternalLink as Ext } from 'lucide-react'
 import { useStore } from '../store/useStore'
+import TopicTable from '../components/TopicTable'
 import { PageHeader, Card, Label, Bar, Chip, H2, Tabs, Checkbox, Stepper, ProgressRing, Field, Confidence } from '../components/ui'
 import { SKILL_MAP, LEVELS } from '../data/skills'
 import { skillEvidence } from '../engine/scoring'
@@ -13,6 +14,14 @@ import { PROGRAM_START } from '../data/roadmap'
 
 const TABS = ['Learn', 'Practice', 'Interview', 'Project', 'Revision']
 const TAB_MAP = { sql: 'SQL', powerbi: 'Power BI', excel: 'Excel', python: 'Python' }
+
+function groupByWeekBand(topics) {
+  const bands = [[1, 4, 'Foundations · Weeks 1–4'], [5, 8, 'Core · Weeks 5–8'], [9, 12, 'Applied · Weeks 9–12'], [13, 16, 'Interview polish · Weeks 13–16']]
+  const out = bands.map(([a, b, title]) => ({ title, items: topics.filter((t) => t.week >= a && t.week <= b) })).filter((g) => g.items.length)
+  const rest = topics.filter((t) => !t.week)
+  if (rest.length) out.push({ title: 'Other', items: rest })
+  return out.length > 1 ? out : [{ title: null, items: topics }]
+}
 
 export default function SkillPage() {
   const { id } = useParams()
@@ -43,14 +52,11 @@ export default function SkillPage() {
     <div>
       <PageHeader eyebrow={`Skill · ${skill.domain}`} title={skill.name} subtitle={`Evidence-based progression: ${LEVELS.join(' → ')}. "Interview Ready" unlocks only when every gate is met — watching a course is not evidence.`} right={<Chip color={color}>{ev.levelName}</Chip>} />
 
-      <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3 mb-4">
-        <Stat label="Current level" value={ev.levelName} sub={`${ev.score}% evidence`} />
-        <Stat label={id === 'sql' ? 'Questions solved' : 'Problems logged'} value={id === 'sql' ? solved : ev.evidence.problems || 0} sub={id === 'sql' ? `${totals.e}E · ${totals.m}M · ${totals.h}H` : `target ${skill.gates.problems}`} />
-        {id === 'sql' && <Stat label="Accuracy" value={`${acc}%`} sub={`avg ${avgTime} min / problem`} />}
-        <Stat label="Current topic" value={currentTopic?.name.split(' ')[0] || 'Done'} sub={currentTopic?.name || 'All topics complete'} />
-        <Stat label="Weak areas" value={weak.length} sub={weak.map((w) => w.name.split(' ')[0]).join(', ') || 'none'} />
-        {id === 'sql' && <Stat label="Practice streak" value={`${streakDays}d`} sub="days with logged problems" />}
-        <Stat label="Interview readiness" value={`${ev.checks.find((c) => c.key === 'interview')?.progress ?? 0}%`} sub={`${ev.evidence.interview || 0} / ${skill.gates.interview} interview problems`} />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+        <Stat label="Level" value={ev.levelName} sub={`${ev.score}% evidence · ${ev.checks.filter((c) => c.ok).length}/${ev.checks.length} gates`} />
+        <Stat label={id === 'sql' ? 'Problems solved' : 'Problems logged'} value={id === 'sql' ? solved : ev.evidence.problems || 0} sub={id === 'sql' ? `${acc}% accuracy · ${streakDays}d streak` : `target ${skill.gates.problems}`} />
+        <Stat label="Topics learned" value={`${ev.topicsDone} / ${skill.topics.length}`} sub={currentTopic ? `next: ${currentTopic.name}` : 'All topics complete'} />
+        <Stat label="Interview ready" value={`${skill.topics.filter((t) => state.topicStages?.[t.id]?.ready).length} / ${skill.topics.length}`} sub={`${ev.evidence.interview || 0} / ${skill.gates.interview} interview problems`} />
       </div>
 
       <div className="grid lg:grid-cols-3 gap-4 mb-4">
@@ -77,9 +83,9 @@ export default function SkillPage() {
       {tab === 'Learn' && (
         <div className="grid lg:grid-cols-3 gap-4">
           <Card className="lg:col-span-2">
-            <H2>Concept checklist — {ev.topicsDone} / {skill.topics.length}</H2>
-            <div className="text-[12px] text-muted mb-3">Tick a concept only after: Learn → Practice → Apply → Explain. Each concept maps to a roadmap week.</div>
-            <div className="space-y-2">{skill.topics.map((t) => <div key={t.id} className="flex items-center gap-2"><Checkbox label={t.name} checked={state.topics[t.id]} onChange={() => toggleTopic(t.id)} className="flex-1" />{t.week && <Chip className="text-muted border-line2 bg-raised">W{t.week}</Chip>}</div>)}</div>
+            <div className="flex items-center justify-between mb-1"><H2>Skill tree — {ev.topicsDone} / {skill.topics.length} learned</H2><span className="text-[12px] text-muted">{skill.topics.filter((t) => state.topicStages?.[t.id]?.ready).length} interview ready</span></div>
+            <div className="text-[12px] text-muted mb-3">Tick each stage only with evidence. "Learn" counts toward readiness; "Interview Ready" means you can explain it out loud in 60 seconds.</div>
+            <TopicTable topics={skill.topics} groupBy={groupByWeekBand} className="-mx-1" />
           </Card>
           <Card>
             <H2>Resources</H2>
@@ -110,7 +116,7 @@ export default function SkillPage() {
 
 function addDaysLocal(s, n) { const [y, m, d] = s.split('-').map(Number); const dt = new Date(y, m - 1, d + n); return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}` }
 
-function Stat({ label, value, sub }) { return <div className="card p-3"><Label>{label}</Label><div className="num text-[17px] font-bold mt-0.5 truncate">{value}</div><div className="text-[11px] text-muted truncate">{sub}</div></div> }
+function Stat({ label, value, sub }) { return <div className="card px-4 py-3"><Label>{label}</Label><div className="num text-[17px] font-bold mt-0.5 truncate">{value}</div><div className="text-[11px] text-muted truncate">{sub}</div></div> }
 
 export function ChallengeCard({ title, challenge, color, onDone, minutes = 30 }) {
   const [running, setRunning] = useState(false)

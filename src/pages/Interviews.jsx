@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
-import { Eye, EyeOff, Repeat, Star, Filter, Play } from 'lucide-react'
+import { Eye, EyeOff, Repeat, Star } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import { PageHeader, Card, Label, Bar, Chip, H2, Tabs, Confidence, Field, Checkbox } from '../components/ui'
 import { QUESTIONS, INTERVIEW_TABS, CASES, CASE_FRAMEWORK } from '../data/interview'
@@ -29,9 +29,39 @@ export default function InterviewCenter() {
   return (
     <div>
       <PageHeader eyebrow="Career" title="Interview Center" subtitle="Question → my answer → ideal answer → confidence. Confidence ≥ 4 counts as strong. 60 strong answers unlocks Interview Ready." right={<Chip className="text-accent-glow border-accent/40 bg-accent/10">{stats.strong} strong · {stats.rated}/{stats.total} rated · avg {stats.avg.toFixed(1)}</Chip>} />
-      <div className="grid md:grid-cols-4 gap-3 mb-4">
-        <Card className="md:col-span-3"><Label>Coverage by round</Label><div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-2 mt-2">{INTERVIEW_TABS.map((t) => { const v = stats.byTab[t] || { total: 0, strong: 0 }; return <button key={t} onClick={() => setTab(t)} className="text-left"><div className="flex justify-between text-[12px]"><span className={cn(tab === t ? 'text-ink font-medium' : 'text-soft')}>{t}</span><span className="num text-muted">{v.strong}/{v.total}</span></div><Bar value={v.total ? Math.round((v.strong / v.total) * 100) : 0} color={tab === t ? 'rgb(var(--c-accent))' : '#3a3a4c'} className="mt-1" height={4} /></button> })}</div></Card>
-        <Card><Label>Practice these next</Label><div className="mt-2 space-y-1">{weakest.map((w) => <button key={w.t} onClick={() => setTab(w.t)} className="block text-[12.5px] text-soft hover:text-ink">› {w.t} <span className="text-muted num">({w.strong}/{w.total} strong)</span></button>)}</div><Link to="/projects" className="btn-ghost btn-xs mt-3"><Play size={11} />Project simulator</Link></Card>
+      <div className="card overflow-hidden mb-4">
+        <div className="overflow-x-auto">
+          <table className="w-full text-[13px]">
+            <thead><tr className="text-left border-b border-line bg-raised/40">
+              <th className="label font-semibold px-4 py-2.5">Category</th>
+              <th className="label font-semibold px-3 py-2.5 text-center">Questions</th>
+              <th className="label font-semibold px-3 py-2.5 text-center">Rated</th>
+              <th className="label font-semibold px-3 py-2.5 text-center">Strong (≥4)</th>
+              <th className="label font-semibold px-3 py-2.5 text-center">Revision</th>
+              <th className="label font-semibold px-3 py-2.5 w-[180px]">Coverage</th>
+              <th className="label font-semibold px-3 py-2.5 text-center">Ready</th>
+            </tr></thead>
+            <tbody>
+              {INTERVIEW_TABS.map((t) => {
+                const v = stats.byTab[t] || { total: 0, strong: 0, rated: 0 }
+                const rev = QUESTIONS.filter((q) => q.tab === t && state.interview[q.id]?.needsRevision).length
+                const pct = v.total ? Math.round((v.strong / v.total) * 100) : 0
+                return (
+                  <tr key={t} onClick={() => { setTab(t); setSp({ tab: t }) }} className={cn('border-t border-line/70 cursor-pointer hover:bg-raised/30', tab === t && 'bg-accent/10')}>
+                    <td className={cn('px-4 py-2 font-medium', tab === t ? 'text-ink' : 'text-soft')}>{t}</td>
+                    <td className="px-3 py-2 text-center num text-muted">{v.total}</td>
+                    <td className="px-3 py-2 text-center num">{v.rated || 0}</td>
+                    <td className="px-3 py-2 text-center num text-ok">{v.strong}</td>
+                    <td className="px-3 py-2 text-center num text-warn">{rev || ''}</td>
+                    <td className="px-3 py-2"><div className="flex items-center gap-2"><div className="flex-1 h-1.5 rounded-full bg-line overflow-hidden"><div className="h-full bg-accent" style={{ width: `${pct}%` }} /></div><span className="num text-[11px] text-muted w-8 text-right">{pct}%</span></div></td>
+                    <td className="px-3 py-2 text-center"><input type="checkbox" className="checkbox pointer-events-none" readOnly checked={v.total > 0 && v.strong >= Math.ceil(v.total * 0.8)} tabIndex={-1} /></td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+        <div className="px-4 py-2 border-t border-line text-[11.5px] text-muted flex flex-wrap gap-x-4 gap-y-1"><span>Strong answers: <span className="num text-ink">{stats.strong}</span> / 60 for Interview Ready</span><span>Practice next: {weakest.map((w) => w.t).join(' · ')}</span></div>
       </div>
       <div className="flex flex-wrap items-center gap-2 mb-3">
         <Tabs tabs={INTERVIEW_TABS} value={tab} onChange={(t) => { setTab(t); setSp({ tab: t }) }} className="flex-1" />
@@ -48,32 +78,28 @@ export default function InterviewCenter() {
 
 function QuestionCard({ q, c, onRate, onAnswer, onRevision, onStrong, focus }) {
   const [show, setShow] = useState(false)
-  const [edit, setEdit] = useState(false)
   const [ans, setAns] = useState(c.myAnswer || '')
-  const dc = { Easy: 'text-ok border-ok/40 bg-ok/10', Medium: 'text-warn border-warn/40 bg-warn/10', Hard: 'text-bad border-bad/40 bg-bad/10' }[q.difficulty]
+  const dirty = ans !== (c.myAnswer || '')
+  const dc = { Easy: 'text-ok', Medium: 'text-warn', Hard: 'text-bad' }[q.difficulty]
   return (
-    <Card id={'q-' + q.id} className={cn(focus && 'border-accent/60 shadow-glow', c.confidence >= 4 && 'border-ok/20')}>
-      <div className="flex flex-wrap items-start gap-2">
+    <Card id={'q-' + q.id} className={cn('px-5 py-4', focus && 'border-accent/60')}>
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex-1 min-w-[260px]">
-          <div className="flex flex-wrap gap-1.5 mb-1"><Chip className={dc}>{q.difficulty}</Chip><Chip className="text-muted border-line2 bg-raised">{q.topic}</Chip>{c.needsRevision && <Chip className="text-warn border-warn/40 bg-warn/10"><Repeat size={10} />revision</Chip>}</div>
-          <div className="text-[14px] font-medium leading-snug">{q.question}</div>
+          <div className="text-[14.5px] font-semibold leading-snug">{q.question}</div>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-[11.5px] text-muted"><span className={dc}>{q.difficulty}</span><span>{q.topic}</span>{c.needsRevision && <span className="text-warn inline-flex items-center gap-1"><Repeat size={10} />in revision</span>}{c.confidence >= 4 && <span className="text-ok">Strong</span>}</div>
         </div>
-        <div className="flex flex-col items-end gap-1"><span className="text-[10.5px] text-muted">My confidence</span><Confidence value={c.confidence} onChange={onRate} /></div>
+        <div className="flex items-center gap-2"><span className="text-[11px] text-muted">Confidence</span><Confidence value={c.confidence} onChange={onRate} /></div>
       </div>
-      <div className="mt-3 grid lg:grid-cols-2 gap-3">
-        <div>
-          <div className="flex items-center justify-between"><Label>My answer</Label><button className="text-[11px] text-accent-glow" onClick={() => { if (edit) onAnswer(ans); setEdit(!edit) }}>{edit ? 'Save' : c.myAnswer ? 'Edit' : 'Write'}</button></div>
-          {edit ? <textarea rows={4} className="input mt-1" value={ans} onChange={(e) => setAns(e.target.value)} placeholder="Answer out loud first, then write the skeleton here…" /> : <div className="text-[12.5px] text-soft mt-1 whitespace-pre-wrap min-h-[24px]">{c.myAnswer || <span className="text-muted italic">Not answered yet.</span>}</div>}
-        </div>
-        <div>
-          <div className="flex items-center justify-between"><Label>Ideal answer</Label><button className="text-[11px] text-accent-glow inline-flex items-center gap-1" onClick={() => setShow(!show)}>{show ? <><EyeOff size={11} />Hide</> : <><Eye size={11} />Reveal</>}</button></div>
-          <div className={cn('text-[12.5px] mt-1 leading-relaxed', show ? 'text-soft' : 'text-transparent select-none blur-sm')}>{q.ideal}</div>
-        </div>
+      <div className="mt-3">
+        <div className="label mb-1">My answer</div>
+        <textarea rows={3} className="input" value={ans} onChange={(e) => setAns(e.target.value)} onBlur={() => dirty && onAnswer(ans)} placeholder="Answer out loud first, then write the skeleton here…" />
       </div>
-      <div className="flex flex-wrap gap-1.5 mt-3 pt-2 border-t border-line">
-        <button className="btn-ghost btn-xs" onClick={() => { setEdit(true); setShow(false) }}><Play size={11} />Practice</button>
-        <button className="btn-ghost btn-xs" onClick={onStrong}><Star size={11} />Mark Strong</button>
-        <button className={cn('btn-xs', c.needsRevision ? 'btn-subtle' : 'btn-ghost')} onClick={onRevision}><Repeat size={11} />{c.needsRevision ? 'In revision' : 'Add to Revision'}</button>
+      {show && <div className="mt-3 bg-raised/50 border border-line rounded-md px-3.5 py-3"><div className="label mb-1">Reference answer</div><div className="text-[12.5px] text-soft leading-relaxed">{q.ideal}</div></div>}
+      <div className="flex flex-wrap gap-2 mt-3">
+        <button className="btn-subtle btn-xs" onClick={() => setShow(!show)}>{show ? <><EyeOff size={11} />Hide reference</> : <><Eye size={11} />Reveal reference answer</>}</button>
+        <button className={cn('btn-xs', c.needsRevision ? 'btn-subtle' : 'btn-ghost')} onClick={onRevision}><Repeat size={11} />{c.needsRevision ? 'In revision' : 'I got this wrong'}</button>
+        <button className="btn-ghost btn-xs" onClick={onStrong}><Star size={11} />Mark ready</button>
+        {dirty && <button className="btn-primary btn-xs ml-auto" onClick={() => onAnswer(ans)}>Save answer</button>}
       </div>
     </Card>
   )

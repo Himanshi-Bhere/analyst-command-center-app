@@ -39,7 +39,7 @@ body { @apply text-ink font-sans antialiased; background-color: rgb(var(--c-base
 :root {
   --c-ok: 61 220 151; --c-warn: 245 181 68; --c-bad: 240 106 106; --c-info: 79 183 245;
   --r-card: 12px; --r-btn: 8px; --r-input: 8px; --r-chip: 6px;
-  --card-pad: 1rem; --gap: 1rem; --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif; --font-display: var(--font-sans); --font-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --card-pad: 1.15rem; --gap: 1rem; --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif; --font-display: var(--font-sans); --font-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
   --card-bg: rgb(var(--c-card)); --card-border: rgb(var(--c-line)); --card-blur: 0px; --card-shadow: 0 1px 0 rgba(255,255,255,0.02) inset, 0 8px 24px -12px rgb(0 0 0 / 0.6);
   --panel-bg: rgb(var(--c-panel)); --header-bg: rgb(var(--c-panel) / 0.8);
   --btn-primary-bg: rgb(var(--c-accent) / 0.9); --btn-primary-fg: #fff; --btn-primary-shadow: 0 0 0 1px rgb(var(--c-accent) / 0.35), 0 0 24px rgb(var(--c-accent) / 0.15);
@@ -135,6 +135,29 @@ body { @apply text-ink font-sans antialiased; background-color: rgb(var(--c-base
 [data-theme='neon'] .checkbox { accent-color: rgb(0 229 255); }
 [data-theme='neon'] .btn-primary:hover { background: rgb(var(--c-accent-glow)); }
 
+
+/* ---------- CLEAN — reference look: calm navy-slate, single blue accent, flat cards, no glow ---------- */
+[data-theme='clean'] {
+  color-scheme: dark;
+  --c-base: 11 15 23; --c-panel: 14 19 29; --c-card: 17 23 34; --c-raised: 24 31 45; --c-line: 30 39 55; --c-line2: 44 55 75;
+  --c-muted: 122 136 160; --c-soft: 176 188 208; --c-ink: 232 237 245;
+  --c-accent: 59 130 246; --c-accent-dim: 37 99 235; --c-accent-glow: 125 176 255;
+  --c-ok: 52 211 153; --c-warn: 245 158 11; --c-bad: 239 68 68; --c-info: 56 189 248;
+  --r-card: 10px; --r-btn: 6px; --r-input: 6px; --r-chip: 4px;
+  --card-pad: 1.25rem; --gap: 1rem; --text-scale: 1;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif; --font-display: var(--font-sans); --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --card-bg: rgb(var(--c-card)); --card-border: rgb(var(--c-line)); --card-blur: 0px; --card-shadow: none;
+  --panel-bg: rgb(var(--c-panel)); --header-bg: rgb(var(--c-panel));
+  --btn-primary-bg: rgb(var(--c-accent)); --btn-primary-fg: #fff; --btn-primary-shadow: none;
+  --grid-dot: transparent; --bg-image: none;
+}
+[data-theme='clean'] .num { font-family: var(--font-sans); font-variant-numeric: tabular-nums; }
+[data-theme='clean'] .label { letter-spacing: 0.06em; font-size: 10.5px; font-weight: 600; }
+[data-theme='clean'] .shadow-glow { box-shadow: none; }
+[data-theme='clean'] .tab-active { background: rgb(var(--c-accent)); color: #fff; border-color: rgb(var(--c-accent)); }
+[data-theme='clean'] .kbd { background: rgb(var(--c-raised)); }
+[data-theme='clean'] .chip { font-weight: 500; letter-spacing: 0; text-transform: none; }
+
 /* ---------- Apply theme tokens to shared classes ---------- */
 html { font-size: calc(16px * var(--text-scale)); }
 .app-shell { background: transparent !important; }
@@ -158,7 +181,7 @@ body { font-family: var(--font-sans); background-image: var(--bg-image); backgro
 .tab { border-radius: var(--r-btn); }
 .kbd { border-radius: calc(var(--r-btn) / 2); }
 .checkbox { border-radius: calc(var(--r-input) / 2); }
-.card.p-4 { padding: var(--card-pad); }
+.card.p-4, .card.p-5 { padding: var(--card-pad); }
 aside, .theme-panel { background: var(--panel-bg) !important; }
 header.theme-header { background: var(--header-bg) !important; }
 [data-theme='aurora'] aside { border-color: rgb(255 255 255 / 0.08); backdrop-filter: blur(20px); }

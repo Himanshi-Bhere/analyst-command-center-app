@@ -12,6 +12,24 @@ import { SKILL_MAP } from '../data/skills'
 import { MONTHS, WEEKS } from '../data/roadmap'
 
 // ---------------- WEEKLY ----------------
+function DayRow({ date, isToday, defaultOpen, count, done, mins, children }) {
+  const [open, setOpen] = useState(defaultOpen)
+  const pct = count ? Math.round((done / count) * 100) : 0
+  return (
+    <div className="border-t border-line/70 first:border-t-0">
+      <button onClick={() => setOpen(!open)} className="w-full flex items-center gap-4 px-5 py-2.5 text-left hover:bg-raised/30">
+        <span className="text-muted text-[11px] w-3">{open ? '▾' : '▸'}</span>
+        <span className={cn('text-[13px] font-semibold w-28', isToday ? 'text-accent-glow' : 'text-ink')}>{DAY_SHORT[dow(date)]} {fmtShort(date)}{isToday && <span className="text-[10px] text-muted font-normal ml-1">today</span>}</span>
+        <span className="num text-[12px] text-muted w-20">{done} / {count} tasks</span>
+        <span className="num text-[12px] text-muted w-14">{hrs(mins)}</span>
+        <span className="flex-1 h-1.5 rounded-full bg-line overflow-hidden max-w-[220px]"><span className="block h-full bg-accent" style={{ width: `${pct}%` }} /></span>
+        <span className="num text-[11px] text-muted w-8 text-right">{pct}%</span>
+      </button>
+      {open && <div className="px-5 pb-4 pt-1">{children}</div>}
+    </div>
+  )
+}
+
 export function WeeklyPlan() {
   const state = useStore()
   const { saveWeeklyReview, setLaneOverride } = state
@@ -70,12 +88,12 @@ export function WeeklyPlan() {
         <div className="mt-2 text-[12px]">Primary resource: <a className="text-accent-glow hover:underline" href={week.resource.url} target="_blank" rel="noreferrer">{week.resource.name}</a></div>
       </Card>
 
-      <div className="grid xl:grid-cols-7 gap-3 mb-4">
-        {stats.perDay.map((d, i) => { const ts = tasksForDate(d.date, state); return (
-          <Card key={d.date} className={cn('p-3', d.date === today && 'border-accent/50')}>
-            <div className="flex justify-between items-center mb-2"><span className="text-[12.5px] font-semibold">{DAY_SHORT[dow(d.date)]} <span className="text-muted font-normal">{fmtShort(d.date)}</span></span><span className="num text-[11px] text-muted">{hrs(d.minsPlanned)}</span></div>
-            <div className="space-y-1">{ts.map((t) => <div key={t.id} className={cn('text-[11.5px] leading-snug flex gap-1.5', isDone(t, state) ? 'text-muted line-through' : 'text-soft')}><span className="h-1.5 w-1.5 rounded-full mt-1.5 shrink-0" style={{ background: skillColor(t.skill) }} /><span className="truncate">{t.title}</span></div>)}</div>
-          </Card>
+      <div className="card overflow-hidden mb-4">
+        <div className="px-5 py-3 border-b border-line flex items-center justify-between"><H2>Day by day</H2><span className="text-[12px] text-muted">Click a day to expand its tasks · checkboxes work here too</span></div>
+        {stats.perDay.map((d) => { const ts = tasksForDate(d.date, state); const done = ts.filter((t) => isDone(t, state)).length; const isT = d.date === today; return (
+          <DayRow key={d.date} date={d.date} isToday={isT} defaultOpen={isT} count={ts.length} done={done} mins={d.minsPlanned}>
+            <div className="space-y-2">{ts.map((t) => <TaskCard key={t.id} task={t} compact />)}{!ts.length && <div className="text-[12.5px] text-muted">Rest day — nothing scheduled.</div>}</div>
+          </DayRow>
         ) })}
       </div>
 

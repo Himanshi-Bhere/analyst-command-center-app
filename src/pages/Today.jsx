@@ -30,9 +30,15 @@ export default function Today() {
   const can = open.filter((t) => t.priority === 'LOW')
   const logged = state.hoursLog[date] || 0
 
+  const [view, setView] = useState('all')
+  const [cat, setCat] = useState('all')
+  const cats = useMemo(() => Array.from(new Set(ranked.map((t) => t.type).filter(Boolean))), [ranked])
+  const visible = ranked.filter((t) => (view === 'all' ? true : view === 'todo' ? !isClosed(t, state) : isClosed(t, state))).filter((t) => cat === 'all' || t.type === cat)
+  const totalMin = ranked.reduce((a, t) => a + (t.estMin || 0), 0)
+
   return (
-    <div>
-      <PageHeader eyebrow="Today" title="Today's Mission" subtitle="What EXACTLY should I study today — ranked by the priority engine. Every checkbox updates every metric." right={
+    <div className="max-w-[1100px]">
+      <PageHeader eyebrow="Plan" title="Today" subtitle="Ranked by the priority engine. Every checkbox updates every metric." right={
         <div className="flex items-center gap-1">
           <button className="btn-ghost btn-xs" onClick={() => setOffset(offset - 1)}><ChevronLeft size={13} /></button>
           <button className="btn-ghost btn-xs" onClick={() => setOffset(0)}>Today</button>
@@ -42,25 +48,36 @@ export default function Today() {
       } />
 
       <Card className="mb-4 flex flex-wrap items-center gap-5">
-        <ProgressRing value={cs.pct} size={72} stroke={6}><div className="text-center"><div className="num text-[15px] font-bold">{cs.pct}%</div></div></ProgressRing>
+        <ProgressRing value={cs.pct} size={64} stroke={6}><div className="num text-[14px] font-bold">{cs.pct}%</div></ProgressRing>
         <div className="flex-1 min-w-[220px]">
           <div className="text-[16px] font-semibold">{fmtLong(date)} {offset !== 0 && <span className="text-muted text-[12px] font-normal">({offset > 0 ? '+' : ''}{offset}d)</span>}</div>
           <div className="text-[12.5px] text-muted mt-0.5">{week.code} — {week.title} · {ranked[0]?.dayTemplate}</div>
-          <div className="grid grid-cols-3 gap-3 mt-3 text-[12.5px]">
-            <div><Label>Target</Label><div className="num text-[15px] font-semibold">{hrs(targetMin)}</div></div>
-            <div><Label>Progress</Label><div className="num text-[15px] font-semibold">{hrs(cs.minsDone + logged)} <span className="text-muted text-[12px]">/ {hrs(Math.max(targetMin, cs.minsPlanned))}</span></div></div>
-            <div><Label>Tasks</Label><div className="num text-[15px] font-semibold">{cs.done} <span className="text-muted text-[12px]">/ {cs.total}</span></div></div>
-          </div>
-          <Bar value={Math.round(((cs.minsDone + logged) / Math.max(targetMin, cs.minsPlanned)) * 100)} color="#3ddc97" className="mt-2" />
         </div>
-        <div className="flex items-center gap-2 text-[12px]"><Clock size={13} className="text-muted" /><span className="text-muted">Log extra time</span><input type="number" className="input w-20 py-1" value={extra} onChange={(e) => setExtra(+e.target.value)} /><span className="text-muted">min</span><button className="btn-subtle btn-xs" onClick={() => logHours(date, extra)}>Log</button></div>
+        <div className="grid grid-cols-3 gap-6 text-[12.5px]">
+          <div><Label>Tasks</Label><div className="num text-[16px] font-semibold">{cs.done} <span className="text-muted text-[12px]">/ {cs.total}</span></div></div>
+          <div><Label>Hours</Label><div className="num text-[16px] font-semibold">{hrs(cs.minsDone + logged)} <span className="text-muted text-[12px]">/ {hrs(Math.max(targetMin, totalMin))}</span></div></div>
+          <div><Label>Must-do open</Label><div className={cn('num text-[16px] font-semibold', must.length ? 'text-bad' : 'text-ok')}>{must.length}</div></div>
+        </div>
+        <div className="flex items-center gap-2 text-[12px] w-full sm:w-auto"><Clock size={13} className="text-muted" /><span className="text-muted">Log extra</span><input type="number" className="input w-20 py-1" value={extra} onChange={(e) => setExtra(+e.target.value)} /><button className="btn-ghost btn-xs" onClick={() => logHours(date, extra)}>+ min</button></div>
       </Card>
 
+      <div className="flex flex-wrap items-center gap-2 mb-3">
+        <div className="flex gap-1">{[['all', 'All'], ['todo', 'To do'], ['done', 'Done']].map(([k, l]) => <button key={k} onClick={() => setView(k)} className={cn('tab', view === k && 'tab-active')}>{l}</button>)}</div>
+        <select className="input w-auto py-1 text-[12.5px]" value={cat} onChange={(e) => setCat(e.target.value)}><option value="all">All categories</option>{cats.map((c) => <option key={c}>{c}</option>)}</select>
+        <span className="text-[12px] text-muted ml-auto">{visible.length} shown · {open.length} open · {closed.length} done</span>
+      </div>
+
       {ranked.length === 0 && <Empty text="No tasks scheduled for this day." />}
-      <Section title="MUST do today" tone="bad" tasks={must} />
-      <Section title="SHOULD do" tone="info" tasks={should} />
-      <Section title="CAN postpone" tone="muted" tasks={can} />
-      {closed.length > 0 && <Section title={`Closed (${closed.length})`} tone="ok" tasks={closed} compact />}
+      {view === 'all' && cat === 'all' ? (
+        <>
+          <Section title="Must do" tone="bad" tasks={must} />
+          <Section title="Should do" tone="info" tasks={should} />
+          <Section title="Can postpone" tone="muted" tasks={can} />
+          {closed.length > 0 && <Section title="Done" tone="ok" tasks={closed} compact />}
+        </>
+      ) : (
+        <div className="space-y-2">{visible.map((t) => <TaskCard key={t.id} task={t} compact={isClosed(t, state)} />)}{!visible.length && ranked.length > 0 && <Empty text="Nothing matches this filter." />}</div>
+      )}
 
       <Modal open={add} onClose={() => setAdd(false)} title="Add a custom task">
         <div className="grid sm:grid-cols-2 gap-3">
