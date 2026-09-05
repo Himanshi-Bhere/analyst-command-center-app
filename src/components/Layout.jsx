@@ -129,7 +129,7 @@ function ThemeButton() {
       {open && (
         <div className="absolute right-0 top-9 w-56 card p-1.5 z-50 animate-fadeIn" onMouseLeave={() => setOpen(false)}>
           <div className="label px-2 py-1">Theme</div>
-          {THEMES.map((t) => <button key={t.id} onClick={() => { setSettings({ theme: t.id }); setOpen(false) }} className={cn('w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12.5px] hover:bg-raised', theme === t.id ? 'text-ink bg-raised' : 'text-soft')}><span className="h-4 w-4 rounded-full border border-line2 shrink-0" style={{ background: `linear-gradient(135deg, ${t.swatch[0]} 50%, ${t.swatch[1]} 50%)` }} /><span className="flex-1 text-left">{t.name}</span>{theme === t.id && <span className="text-accent-glow">✓</span>}</button>)}
+          {THEMES.map((t) => <button key={t.id} onClick={() => { setSettings({ theme: t.id }); setOpen(false) }} className={cn('w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12.5px] hover:bg-raised', theme === t.id ? 'text-ink bg-raised' : 'text-soft')}><span className="h-5 w-8 rounded border border-line2 shrink-0" style={{ background: t.preview }} /><span className="flex-1 text-left">{t.name}</span>{theme === t.id && <span className="text-accent-glow">✓</span>}</button>)}
         </div>
       )}
     </div>
@@ -146,7 +146,7 @@ function TopBar({ onMenu, onPalette }) {
   const st = useMemo(() => streak(state, today), [state.taskState, state.hoursLog, today])
   const month = getMonthForDate(today)
   return (
-    <header className="h-14 shrink-0 border-b border-line bg-panel/80 backdrop-blur flex items-center gap-3 px-3 md:px-5">
+    <header className="theme-header h-14 shrink-0 border-b border-line bg-panel/80 backdrop-blur flex items-center gap-3 px-3 md:px-5">
       <button className="md:hidden text-soft" onClick={onMenu}><Menu size={20} /></button>
       <button onClick={onPalette} className="flex-1 min-w-0 max-w-xl flex items-center gap-2 bg-card border border-line rounded-lg px-3 py-1.5 text-[13px] text-muted hover:border-line2 text-left">
         <Search size={14} className="shrink-0" /><span className="flex-1 min-w-0 truncate"><span className="sm:hidden">Search…</span><span className="hidden sm:inline">Search SQL topics, projects, questions, metrics, companies…</span></span><span className="kbd hidden sm:inline">Ctrl K</span>
@@ -185,7 +185,7 @@ export default function Layout() {
     window.addEventListener('keydown', h); return () => window.removeEventListener('keydown', h)
   }, [])
   return (
-    <div className="h-full flex bg-base">
+    <div className="app-shell h-full flex bg-base">
       <div className="hidden md:block h-full"><Sidebar /></div>
       {mobile && (
         <div className="fixed inset-0 z-[70] md:hidden">

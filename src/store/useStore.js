@@ -126,12 +126,12 @@ export const useStore = create(persist((set, get) => ({
   resetAll: () => set({ ...initial }),
 }), {
   name: 'acc-state-v1',
-  version: 4,
+  version: 5,
   migrate: (persisted) => {
     if (persisted?.settings?.name === 'Vedant') persisted.settings.name = 'Himanshi'
     if (persisted?.settings && (!persisted.settings.startedOn || persisted.settings.startedOn < DEFAULT_PROGRAM_START)) persisted.settings.startedOn = DEFAULT_PROGRAM_START
     if (persisted && !Array.isArray(persisted.scratch)) persisted.scratch = []
-    if (persisted?.settings && !persisted.settings.theme) persisted.settings.theme = 'midnight'
+    if (persisted?.settings && !['midnight', 'aurora', 'paper', 'neon'].includes(persisted.settings.theme)) persisted.settings.theme = persisted.settings.theme === 'light' ? 'paper' : 'midnight'
     return persisted
   },
   storage: createJSONStorage(() => localStorage),
