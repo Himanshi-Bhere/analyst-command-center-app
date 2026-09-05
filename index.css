@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------- THEMES (RGB triplets so Tailwind alpha works) ---------- */
+:root { --c-ok: 61 220 151; --c-warn: 245 181 68; --c-bad: 240 106 106; --c-info: 79 183 245; }
+:root, [data-theme='midnight'] {
+  color-scheme: dark; --shadow-a: 0.6; --grid-dot: rgba(255,255,255,0.035);
+  --c-base: 8 8 12; --c-panel: 14 14 20; --c-card: 18 18 26; --c-raised: 24 24 34; --c-line: 32 32 44; --c-line2: 42 42 56;
+  --c-muted: 124 124 146; --c-soft: 180 180 198; --c-ink: 236 236 243;
+  --c-accent: 124 108 246; --c-accent-dim: 91 79 214; --c-accent-glow: 169 156 255;
+}
+[data-theme='ocean'] {
+  color-scheme: dark; --shadow-a: 0.6; --grid-dot: rgba(255,255,255,0.035);
+  --c-base: 6 10 16; --c-panel: 10 16 24; --c-card: 14 21 31; --c-raised: 20 29 42; --c-line: 28 39 54; --c-line2: 38 52 70;
+  --c-muted: 118 134 156; --c-soft: 174 190 208; --c-ink: 234 240 247;
+  --c-accent: 56 160 232; --c-accent-dim: 38 122 190; --c-accent-glow: 125 199 255;
+}
+[data-theme='forest'] {
+  color-scheme: dark; --shadow-a: 0.6; --grid-dot: rgba(255,255,255,0.035);
+  --c-base: 7 11 10; --c-panel: 11 17 15; --c-card: 15 22 20; --c-raised: 21 30 27; --c-line: 29 40 36; --c-line2: 40 54 49;
+  --c-muted: 120 140 132; --c-soft: 176 196 188; --c-ink: 234 242 238;
+  --c-accent: 52 186 130; --c-accent-dim: 36 142 98; --c-accent-glow: 120 224 176;
+}
+[data-theme='graphite'] {
+  color-scheme: dark; --shadow-a: 0.6; --grid-dot: rgba(255,255,255,0.035);
+  --c-base: 10 10 10; --c-panel: 16 16 16; --c-card: 22 22 22; --c-raised: 30 30 30; --c-line: 40 40 40; --c-line2: 54 54 54;
+  --c-muted: 128 128 128; --c-soft: 186 186 186; --c-ink: 240 240 240;
+  --c-accent: 230 230 230; --c-accent-dim: 180 180 180; --c-accent-glow: 255 255 255;
+}
+[data-theme='rose'] {
+  color-scheme: dark; --shadow-a: 0.6; --grid-dot: rgba(255,255,255,0.035);
+  --c-base: 12 8 11; --c-panel: 19 13 17; --c-card: 25 17 22; --c-raised: 33 23 30; --c-line: 44 31 40; --c-line2: 58 41 53;
+  --c-muted: 146 122 138; --c-soft: 200 178 192; --c-ink: 245 236 242;
+  --c-accent: 236 94 150; --c-accent-dim: 190 66 116; --c-accent-glow: 255 150 190;
+}
+[data-theme='light'] {
+  color-scheme: light; --c-ok: 22 163 106; --c-warn: 194 120 3; --c-bad: 220 56 56; --c-info: 14 130 200; --shadow-a: 0.12; --grid-dot: rgba(0,0,0,0.05);
+  --c-base: 243 244 248; --c-panel: 255 255 255; --c-card: 255 255 255; --c-raised: 240 241 246; --c-line: 224 226 234; --c-line2: 204 207 218;
+  --c-muted: 112 116 134; --c-soft: 72 76 94; --c-ink: 20 22 32;
+  --c-accent: 99 82 236; --c-accent-dim: 76 62 196; --c-accent-glow: 84 66 220;
+}
+[data-theme='graphite'] .btn-primary { color: rgb(10 10 10); }
+html, body, #root { height: 100%; }
+body { @apply bg-base text-ink font-sans antialiased; font-feature-settings: 'cv11', 'ss01', 'tnum'; }
+* { scrollbar-width: thin; scrollbar-color: rgb(var(--c-line2)) transparent; }
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb { background: rgb(var(--c-line2)); border-radius: 8px; }
+*::-webkit-scrollbar-track { background: transparent; }
+
+@layer components {
+  .card { @apply bg-card border border-line rounded-xl shadow-card; }
+  .card-hover { @apply transition-colors hover:border-line2; }
+  .label { @apply text-[10.5px] font-semibold tracking-[0.14em] uppercase text-muted; }
+  .num { @apply font-mono tabular-nums; }
+  .btn { @apply inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[13px] font-medium border transition-colors select-none disabled:opacity-40 disabled:cursor-not-allowed; }
+  .btn-primary { @apply btn bg-accent/90 hover:bg-accent border-accent/60 text-white shadow-glow; }
+  .btn-ghost { @apply btn bg-transparent hover:bg-raised border-line text-soft hover:text-ink; }
+  .btn-subtle { @apply btn bg-raised hover:bg-line border-line text-soft hover:text-ink; }
+  .btn-danger { @apply btn bg-bad/10 hover:bg-bad/20 border-bad/30 text-bad; }
+  .btn-xs { @apply px-2 py-1 text-[11.5px] rounded-md; }
+  .input { @apply w-full bg-panel border border-line rounded-lg px-3 py-2 text-[13px] text-ink placeholder:text-muted/70 focus:outline-none focus:border-accent/60 focus:ring-2 focus:ring-accent/20; }
+  .chip { @apply inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10.5px] font-semibold tracking-wide border; }
+  .tab { @apply px-3 py-1.5 text-[12.5px] font-medium rounded-lg text-muted hover:text-ink transition-colors whitespace-nowrap; }
+  .tab-active { @apply bg-raised text-ink border border-line; }
+  .grid-bg { background-image: radial-gradient(var(--grid-dot) 1px, transparent 1px); background-size: 22px 22px; }
+  .glow-line { background: linear-gradient(90deg, transparent, rgb(var(--c-accent) / 0.6), transparent); height: 1px; }
+  .kbd { @apply font-mono text-[10px] px-1.5 py-0.5 rounded border border-line2 bg-raised text-muted; }
+  .checkbox { @apply h-4 w-4 rounded border border-line2 bg-panel accent-accent cursor-pointer; }
+  .prose-sm p { @apply text-[13px] text-soft leading-relaxed; }
+}
