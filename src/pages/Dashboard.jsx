@@ -9,6 +9,9 @@ import { hrs, skillColor, cn } from '../lib/utils'
 import { getWeekForDate, getMonthForDate, tasksForDate, isClosed, programWeekStart, weekStartFor, programDayIndex } from '../engine/tasks'
 import { READINESS_LABELS, readiness, completionStats, weekStats, streak, roadmapProgress, projectsSummary, domainReadiness } from '../engine/scoring'
 import { nextAction } from '../engine/priority'
+import { githubPlan, showcaseSummary } from '../engine/github'
+import { buildNotifications } from '../engine/notify'
+import { SHOWCASE_BY_WEEK } from '../data/weekly'
 import { SKILL_MAP } from '../data/skills'
 
 const DOMAIN_LABEL = { retail: 'Retail / E-Commerce', bfsi: 'BFSI / FinTech', commercial: 'Commercial / Revenue' }
@@ -48,9 +51,10 @@ export default function Dashboard() {
   const month = getMonthForDate(today)
   const d = useMemo(() => {
     const r = readiness(state)
-    return { r, cs: completionStats(state, today), ws: weekStats(state, programWeekStart(today)), st: streak(state, today), rp: roadmapProgress(state, today), ps: projectsSummary(state), dr: domainReadiness(state), na: nextAction(state, today), tasks: tasksForDate(today, state) }
-  }, [state.taskState, state.taskOverrides, state.customTasks, state.topics, state.evidence, state.projects, state.interview, state.applications, state.aptitude, state.hoursLog, state.notes, today])
-  const { r, cs, ws, st, rp, ps, dr, na, tasks } = d
+    return { r, cs: completionStats(state, today), ws: weekStats(state, programWeekStart(today)), st: streak(state, today), rp: roadmapProgress(state, today), ps: projectsSummary(state), dr: domainReadiness(state), na: nextAction(state, today), tasks: tasksForDate(today, state), gh: githubPlan(state, today), sc: showcaseSummary(state) }
+  }, [state.taskState, state.taskOverrides, state.customTasks, state.topics, state.evidence, state.projects, state.interview, state.applications, state.aptitude, state.hoursLog, state.notes, state.weekly, state.github, today])
+  const { r, cs, ws, st, rp, ps, dr, na, tasks, gh, sc } = d
+  const showcase = SHOWCASE_BY_WEEK[week.n]
   const apps = state.applications
   const submitted = apps.filter((a) => !['Wishlist', 'Ready to Apply'].includes(a.status)).length
   const weeklyTarget = state.settings.weeklyHours || 21
@@ -67,6 +71,7 @@ export default function Dashboard() {
   const todayDow = programDayIndex(today)
   const todayTopic = week.topics[Math.min(todayDow, week.topics.length - 1)]
   const openTasks = tasks.filter((t) => !isClosed(t, state))
+  const alerts = useMemo(() => buildNotifications(state, today).filter((n) => ['urgent', 'warn'].includes(n.level) && !(state.notify?.dismissed || {})[n.id]).slice(0, 3), [state.taskState, state.taskOverrides, state.applications, state.weekly, state.github, state.notify, today])
   const pace = rp.elapsedPct ? Math.round((rp.pct / rp.elapsedPct) * 100) : 100
 
   return (
@@ -78,6 +83,12 @@ export default function Dashboard() {
         </div>
         <Link to="/today" className="btn-primary">Open Today <ArrowRight size={13} /></Link>
       </div>
+
+      {alerts.length > 0 && (
+        <div className="card divide-y divide-line overflow-hidden">
+          {alerts.map((n) => <Link key={n.id} to={n.to || '/'} className="flex items-center gap-3 px-4 py-2.5 hover:bg-raised/40"><span className={cn('h-2 w-2 rounded-full shrink-0', n.level === 'urgent' ? 'bg-bad' : 'bg-warn')} /><span className="text-[13px] font-medium">{n.title}</span><span className="text-[12px] text-muted truncate flex-1">{n.text}</span><ChevronRight size={13} className="text-muted shrink-0" /></Link>)}
+        </div>
+      )}
 
       {/* 4 primary KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
@@ -93,8 +104,8 @@ export default function Dashboard() {
         <Stat label="Projects shipped" value={`${ps.filter((p) => p.shipped).length} / 3`} sub={`${activeProject.code} at ${activeProject.pct}%`} to="/projects" />
         <Stat label="Applications" value={submitted} sub={`${apps.length} tracked`} to="/applications" />
         <Stat label="Interview answers" value={r.iv.strong} sub="rated 4–5" to="/interviews" />
-        <Stat label="Best domain" value={DOMAIN_LABEL[dr.best].split(' / ')[0]} sub={`${dr[dr.best]}% ready`} to="/domain/retail" />
-        <Stat label="Pace" value={rp.activeElapsed < 2 ? 'Day 1' : pace >= 85 ? 'On track' : 'Behind'} sub={`${rp.elapsedPct}% time · ${rp.pct}% done`} to="/checklist" />
+        <Stat label="Showcases shipped" value={`${sc.shipped} / ${sc.total}`} sub={showcase ? `W${showcase.week}: ${showcase.title}` : 'weekly mini projects'} to="/showcase" />
+        <Stat label="GitHub today" value={`${gh.pushedCount} / ${gh.must.length}`} sub={gh.must.length ? 'items to push' : 'nothing to push today'} to="/github" />
       </div>
 
       {/* next action + today's goal */}
@@ -137,7 +148,8 @@ export default function Dashboard() {
             <div className="flex justify-between gap-3"><span className="text-muted">Focus topic</span><span className="text-soft text-right">{todayTopic}</span></div>
             <div className="flex justify-between gap-3"><span className="text-muted">Day type</span><span className="text-soft">{DAY_MODE[todayDow]}</span></div>
             <div className="flex justify-between gap-3"><span className="text-muted">Primary skill</span><span className="text-soft">{SKILL_MAP[week.primary]?.name || week.primary}</span></div>
-            <div className="flex justify-between gap-3"><span className="text-muted">Project</span><Link to={`/projects/${activeProject.id}`} className="text-accent-glow hover:underline text-right truncate">{activeProject.code} · {activeProject.pct}%</Link></div>
+            {showcase && <div className="flex justify-between gap-3"><span className="text-muted">Weekly showcase</span><Link to={`/showcase/${showcase.id}`} className="text-accent-glow hover:underline text-right truncate">{showcase.title}</Link></div>}
+            <div className="flex justify-between gap-3"><span className="text-muted">Flagship project</span><Link to={`/projects/${activeProject.id}`} className="text-accent-glow hover:underline text-right truncate">{activeProject.code} · {activeProject.pct}%</Link></div>
             <div className="flex justify-between gap-3"><span className="text-muted">Next milestone</span><span className="text-soft text-right">{nextMilestone.label} · {diffDays(today, nextMilestone.when)}d</span></div>
           </div>
           <div className="mt-4 pt-3 border-t border-line">

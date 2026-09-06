@@ -1,6 +1,7 @@
 import { WEEKS, JOB_SEARCH_WEEK, PROGRAM_START, DAY_TEMPLATES, MONTHS } from '../data/roadmap'
 import { SKILL_MAP } from '../data/skills'
 import { SQL_CHALLENGES, DAX_CHALLENGES, EXCEL_CHALLENGES } from '../data/library'
+import { SHOWCASE_BY_WEEK } from '../data/weekly'
 import { diffDays, monthKey, addDays } from '../lib/dates'
 
 export const weekNumberFor = (date) => Math.floor(diffDays(PROGRAM_START, date) / 7) + 1
@@ -94,10 +95,17 @@ function primaryTasks(week, date, d) {
       { ...base, title: `Review every mistake → create Revision items`, topic: tt, type: 'Revision', estMin: 20, resource: { name: 'Revision Center', url: '/revision' } },
       { ...base, title: `5 more ${SKILL_MAP[lane]?.name || lane} problems (medium)`, topic: t[5], type: 'Practice', estMin: round15(perDay - 50), resource: P(2) },
     ]
-    case 5: return [
-      { ...base, title: `Mini-project: apply ${tt} on a real dataset (write-up + 3 findings)`, topic: tt, type: 'Project', estMin: round15(perDay * 1.1), resource: res('Kaggle'), why: 'Evidence > tutorials. A mini-project is an Interview Ready gate.' },
-    ]
+    case 5: {
+      const sc = SHOWCASE_BY_WEEK[week.n]
+      if (sc) return [
+        { ...base, skill: sc.skill, title: `Weekly Showcase: ${sc.title} — build the deliverables`, topic: sc.title, type: 'Project', estMin: round15(Math.max(perDay * 1.1, (sc.hours - 1) * 60)), resource: { name: 'Showcase brief', url: `/showcase/${sc.id}` }, why: `Industry-shaped mini project that proves ${tt} on a real dataset. Ships to GitHub tomorrow.`, showcase: sc.id, showcaseStage: 'built' },
+      ]
+      return [
+        { ...base, title: `Mini-project: apply ${tt} on a real dataset (write-up + 3 findings)`, topic: tt, type: 'Project', estMin: round15(perDay * 1.1), resource: res('Kaggle'), why: 'Evidence > tutorials. A mini-project is an Interview Ready gate.' },
+      ]
+    }
     default: return [
+      ...(SHOWCASE_BY_WEEK[week.n] ? [{ ...base, skill: 'project', title: `Push ${SHOWCASE_BY_WEEK[week.n].repo} to GitHub + write the executive README`, topic: SHOWCASE_BY_WEEK[week.n].title, type: 'Project', estMin: 60, resource: { name: 'GitHub Center', url: '/github' }, why: 'A pushed repo with a README is evidence; a folder on your laptop is not.', showcase: SHOWCASE_BY_WEEK[week.n].id, showcaseStage: 'pushed' }] : []),
       { ...base, title: `Revise all ${week.code} topics + 10-question self-test`, topic: tt, type: 'Revision', estMin: round15(perDay * 0.8), resource: { name: 'Revision Center', url: '/revision' } },
       { ...base, title: `Weekly Review: ${week.code} scorecard + plan next week`, topic: 'Weekly review', type: 'Revision', estMin: 20, resource: { name: 'Weekly Plan', url: '/weekly' }, why: 'Answer: what did I achieve, what was hardest, what moves to next week?' },
     ]

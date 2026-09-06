@@ -8,7 +8,9 @@ import CalendarPage from './pages/Calendar'
 import Roadmap, { DecemberChecklist } from './pages/Roadmap'
 import SkillPage from './pages/Skills'
 import { StatisticsPage, AptitudePage, DsaPage, BusinessPage, DomainPage } from './pages/Learning'
-import { ProjectHub, ProjectDetail, Portfolio, GithubPage } from './pages/Projects'
+import { ProjectHub, ProjectDetail, Portfolio } from './pages/Projects'
+import GithubPage from './pages/Github'
+import { ShowcaseTracker, ShowcaseDetail } from './pages/Showcase'
 import InterviewCenter from './pages/Interviews'
 import { JobsPage, ApplicationsPage, ResumePage, LinkedInPage, NetworkingPage } from './pages/Career'
 import ScratchpadPage from './pages/Scratchpad'
@@ -36,6 +38,8 @@ export default function App() {
           <Route path="/projects/:id" element={<ProjectDetail />} />
           <Route path="/portfolio" element={<Portfolio />} />
           <Route path="/github" element={<GithubPage />} />
+          <Route path="/showcase" element={<ShowcaseTracker />} />
+          <Route path="/showcase/:id" element={<ShowcaseDetail />} />
           <Route path="/jobs" element={<JobsPage />} />
           <Route path="/applications" element={<ApplicationsPage />} />
           <Route path="/interviews" element={<InterviewCenter />} />

@@ -1,5 +1,6 @@
 import { SKILL_TREE, SKILL_MAP, LEVELS, BADGES } from '../data/skills'
 import { PROJECTS, PROJECT_STAGES } from '../data/projects'
+import { WEEKLY_SHOWCASE } from '../data/weekly'
 import { QUESTIONS } from '../data/interview'
 import { clamp, pct } from '../lib/utils'
 import { addDays, diffDays } from '../lib/dates'
@@ -10,7 +11,10 @@ import { PROGRAM_START } from '../data/roadmap'
 export function skillEvidence(skillId, state) {
   const s = SKILL_MAP[skillId]
   if (!s) return null
-  const ev = state.evidence?.[skillId] || {}
+  const ev0 = state.evidence?.[skillId] || {}
+  // shipped Weekly Showcases (pushed + README) count as mini-project evidence for their skill
+  const shipped = WEEKLY_SHOWCASE.filter((w) => w.skill === skillId && state.weekly?.[w.id]?.stages?.pushed && state.weekly?.[w.id]?.stages?.readme).length
+  const ev = shipped ? { ...ev0, project: (ev0.project || 0) + shipped } : ev0
   const topicsDone = s.topics.filter((t) => state.topics?.[t.id]).length
   const conceptPct = pct(topicsDone, s.topics.length)
   const g = s.gates

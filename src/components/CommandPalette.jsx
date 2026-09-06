@@ -12,6 +12,8 @@ import { cn } from '../lib/utils'
 const COMMANDS = [
   { label: "Start today's plan", to: '/today', kw: 'today plan start' },
   { label: 'Open SQL', to: '/skills/sql', kw: 'sql' },
+  { label: 'Weekly Showcase', to: '/showcase', kw: 'showcase weekly project mini' },
+  { label: 'GitHub — what to push today', to: '/github', kw: 'github push git commit' },
   { label: 'Open Power BI', to: '/skills/powerbi', kw: 'power bi dax' },
   { label: 'Open Excel', to: '/skills/excel', kw: 'excel' },
   { label: 'Start aptitude', to: '/aptitude', kw: 'aptitude quant' },

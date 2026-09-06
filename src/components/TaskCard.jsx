@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { MoreHorizontal, Play, Check, SkipForward, CalendarClock, RotateCcw, Trash2, Clock, ExternalLink as Ext, Info } from 'lucide-react'
+import { MoreHorizontal, Play, Check, SkipForward, CalendarClock, RotateCcw, Trash2, Clock, ExternalLink as Ext, Info, MapPin } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import { cn, hrs } from '../lib/utils'
 import { addDays, fmtShort } from '../lib/dates'
 import { SKILL_MAP } from '../data/skills'
+import { whereFor } from '../engine/where'
 
 // Reference anatomy: [checkbox] Title / one-line description / small chip row ........ [⋯]
 // Everything else (why, start, skip, move, delete) lives behind the ⋯ menu.
@@ -16,6 +17,7 @@ export default function TaskCard({ task, compact, showDate }) {
   const { setTaskStatus, moveTask, removeCustomTask, today } = useStore()
   const [menu, setMenu] = useState(false)
   const [why, setWhy] = useState(false)
+  const [where, setWhere] = useState(false)
   const ref = useRef(null)
   const done = st === 'done'
   const active = st === 'active'
@@ -49,6 +51,8 @@ export default function TaskCard({ task, compact, showDate }) {
             {res?.name && (res.url ? <a href={res.url.startsWith('/') ? '#' + res.url : res.url} target={res.url.startsWith('/') ? undefined : '_blank'} rel="noreferrer" className="inline-flex items-center gap-1 text-info hover:underline"><span className="h-1.5 w-1.5 rounded-sm bg-info inline-block" />{res.name}</a> : <span>{res.name}</span>)}
             {showDate && <span>· {fmtShort(task.date)}</span>}
             {task.movedFrom && <span className="text-warn">moved from {fmtShort(task.movedFrom)}</span>}
+            {task.showcase && <a href={`#/showcase/${task.showcase}`} className="text-accent-glow hover:underline">Showcase brief</a>}
+            {!done && !skipped && <button onClick={() => setWhere(!where)} className={cn('inline-flex items-center gap-0.5 hover:text-ink', where && 'text-ink')}><MapPin size={10} />Where?</button>}
             {overdue && <span className="text-bad font-semibold">Overdue</span>}
             {active && <span className="text-accent-glow font-medium">In progress</span>}
           </div>
@@ -57,6 +61,7 @@ export default function TaskCard({ task, compact, showDate }) {
             {task.why && task.why !== task.reason && <div><span className="text-muted">Purpose: </span>{task.why}</div>}
             <div><span className="text-muted">Topic: </span>{task.topic} · <span className="text-muted">Builds: </span>{SKILL_MAP[task.skill]?.name || task.skill}</div>
           </div>}
+          {where && <WherePanel task={task} />}
         </div>
         <div className="relative shrink-0" ref={ref}>
           <button onClick={() => setMenu(!menu)} className="text-muted hover:text-ink p-1 rounded-md hover:bg-raised" aria-label="Task actions"><MoreHorizontal size={16} /></button>
@@ -70,11 +75,37 @@ export default function TaskCard({ task, compact, showDate }) {
               {skipped && <Item icon={RotateCcw} onClick={() => setTaskStatus(task, 'open')}>Restore</Item>}
               {!done && <Item icon={CalendarClock} onClick={() => moveTask(task, addDays(t, 1))}>Move to tomorrow</Item>}
               <Item icon={Info} onClick={() => setWhy(!why)}>{why ? 'Hide details' : 'Why this task?'}</Item>
+              <Item icon={MapPin} onClick={() => setWhere(!where)}>{where ? 'Hide where' : 'Where to solve / push?'}</Item>
               {res?.url && !res.url.startsWith('/') && <Item icon={Ext} onClick={() => window.open(res.url, '_blank')}>Open resource</Item>}
               {task.source === 'custom' && <Item icon={Trash2} danger onClick={() => removeCustomTask(task.id)}>Delete</Item>}
             </div>
           )}
         </div>
+      </div>
+    </div>
+  )
+}
+
+export function WherePanel({ task }) {
+  const w = whereFor(task)
+  const link = (x) => (x.url.startsWith('/') ? <a key={x.url} href={'#' + x.url} className="text-accent-glow hover:underline">{x.name}</a> : <a key={x.url} href={x.url} target="_blank" rel="noreferrer" className="text-accent-glow hover:underline inline-flex items-center gap-0.5">{x.name}<Ext size={10} /></a>)
+  return (
+    <div className="mt-2 text-[12px] bg-raised/60 border border-line rounded-md px-3 py-2 grid sm:grid-cols-2 gap-x-4 gap-y-2">
+      <div>
+        <div className="label mb-1">Where to solve</div>
+        <div className="flex flex-col gap-0.5">{w.solve.map(link)}</div>
+        {w.tool && <div className="text-muted mt-1">Tool: <span className="text-soft">{w.tool}</span></div>}
+      </div>
+      <div>
+        <div className="label mb-1">Where it goes on GitHub</div>
+        {w.push.push === 'no' ? <div className="text-muted">Skip — {w.push.how}</div> : (
+          <div className="space-y-0.5">
+            <div><span className={w.push.push === 'yes' ? 'text-ok' : 'text-warn'}>{w.push.push === 'yes' ? 'Push' : 'Optional'}</span> → <span className="font-mono text-soft">{w.push.repo}</span></div>
+            {w.push.file && <div className="font-mono text-[11px] text-soft break-all">{w.push.file}</div>}
+            <div className="text-muted">{w.push.how}</div>
+            {w.push.commit && <div className="font-mono text-[11px] text-muted break-all">git commit -m "{w.push.commit}"</div>}
+          </div>
+        )}
       </div>
     </div>
   )

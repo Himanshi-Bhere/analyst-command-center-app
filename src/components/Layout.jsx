@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, CalendarCheck, CalendarRange, CalendarDays, Calendar, Map, Database, Table2, BarChart3, Sigma, Code2, Briefcase, Brain, Binary, ShoppingCart, TrendingUp, Landmark, FolderKanban, Layers, Github, Search, ClipboardList, MessageSquare, FileText, Linkedin, Users, Activity, Library, StickyNote, Repeat, LifeBuoy, Settings, Menu, X, Bell, Command, Zap, ChevronRight, Sun, Award, PenLine, Palette } from 'lucide-react'
+import { Sparkles, LayoutDashboard, CalendarCheck, CalendarRange, CalendarDays, Calendar, Map, Database, Table2, BarChart3, Sigma, Code2, Briefcase, Brain, Binary, ShoppingCart, TrendingUp, Landmark, FolderKanban, Layers, Github, Search, ClipboardList, MessageSquare, FileText, Linkedin, Users, Activity, Library, StickyNote, Repeat, LifeBuoy, Settings, Menu, X, Bell, Command, Zap, ChevronRight, Sun, Award, PenLine, Palette } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import { THEMES } from '../lib/theme'
 import { cn } from '../lib/utils'
 import { streak } from '../engine/scoring'
 import { reminders } from '../engine/priority'
+import NotificationCenter from './NotificationCenter'
 import CommandPalette from './CommandPalette'
 import { getMonthForDate, getWeekForDate } from '../engine/tasks'
 
@@ -31,7 +32,8 @@ const NAV = [
     { to: '/domain/retail', label: 'Domain Tracks', icon: Landmark },
   ] },
   { group: 'Build', items: [
-    { to: '/projects', label: 'Projects', icon: FolderKanban },
+    { to: '/showcase', label: 'Weekly Showcase', icon: Sparkles },
+    { to: '/projects', label: 'Flagship Projects', icon: FolderKanban },
     { to: '/portfolio', label: 'Portfolio', icon: Layers },
     { to: '/github', label: 'GitHub', icon: Github },
     { to: '/resources', label: 'Resources', icon: Library },
@@ -122,13 +124,11 @@ function TopBar({ onMenu, onPalette }) {
   const today = state.today()
   const nav = useNavigate()
   const [q, setQ] = useState('')
-  const rems = useMemo(() => reminders(state, today), [state, today])
-  const [open, setOpen] = useState(false)
   const st = useMemo(() => streak(state, today), [state.taskState, state.hoursLog, today])
   const month = getMonthForDate(today)
   const week = getWeekForDate(today)
   return (
-    <header className="theme-header h-14 shrink-0 border-b border-line bg-panel/80 backdrop-blur flex items-center gap-3 px-3 md:px-5">
+    <header className="theme-header relative z-40 h-14 shrink-0 border-b border-line bg-panel/80 backdrop-blur flex items-center gap-3 px-3 md:px-5">
       <button className="md:hidden text-soft" onClick={onMenu}><Menu size={20} /></button>
       <button onClick={onPalette} className="flex-1 min-w-0 max-w-xl flex items-center gap-2 bg-card border border-line rounded-lg px-3 py-1.5 text-[13px] text-muted hover:border-line2 text-left">
         <Search size={14} className="shrink-0" /><span className="flex-1 min-w-0 truncate"><span className="sm:hidden">Search…</span><span className="hidden sm:inline">Search SQL topics, projects, questions, metrics, companies…</span></span><span className="kbd hidden sm:inline">Ctrl K</span>
@@ -139,20 +139,7 @@ function TopBar({ onMenu, onPalette }) {
         {st.current > 0 && <span className="chip text-warn border-warn/40 bg-warn/10"><Sun size={11} />{st.current}d streak</span>}
       </div>
       <ThemeButton />
-      <div className="relative">
-        <button onClick={() => setOpen(!open)} className="relative text-soft hover:text-ink p-1.5"><Bell size={18} />{rems.length > 0 && <span className={cn('absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 rounded-full text-[9.5px] font-bold flex items-center justify-center', rems.some((r) => r.level === 'warn') ? 'bg-bad text-white' : 'bg-accent text-white')}>{rems.length}</span>}</button>
-        {open && (
-          <div className="absolute right-0 top-9 w-[min(20rem,calc(100vw-1.5rem))] card p-2 z-50 animate-fadeIn" onMouseLeave={() => setOpen(false)}>
-            <div className="label px-2 py-1">Reminders</div>
-            {rems.length === 0 && <div className="text-[12.5px] text-muted px-2 py-3">All clear. Nothing pending.</div>}
-            {rems.map((r, i) => (
-              <button key={i} onClick={() => { nav(r.to); setOpen(false) }} className="w-full text-left flex items-start gap-2 px-2 py-1.5 rounded-md hover:bg-raised text-[12.5px]">
-                <span className={cn('mt-1.5 h-1.5 w-1.5 rounded-full shrink-0', r.level === 'warn' ? 'bg-bad' : 'bg-accent')} /><span className="flex-1 text-soft">{r.text}</span><ChevronRight size={12} className="text-muted mt-1" />
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+      <NotificationCenter />
     </header>
   )
 }

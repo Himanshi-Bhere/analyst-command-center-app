@@ -136,24 +136,3 @@ export function Portfolio() {
     </div>
   )
 }
-
-export function GithubPage() {
-  const state = useStore()
-  const { setRepo, toggleRepoItem } = state
-  return (
-    <div>
-      <PageHeader eyebrow="Projects" title="GitHub Center" subtitle="Structure repositories for executives, not engineers: architecture flowchart at the top, GIFs of the dashboard, commented SQL folder." right={<a href={state.settings.links.github} target="_blank" rel="noreferrer" className="btn-ghost btn-xs"><Github size={12} />My GitHub</a>} />
-      <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {GITHUB_REPOS.map((r) => { const s = state.repos[r.id] || { checklist: {} }; const done = r.checklist.filter((c) => s.checklist?.[c]).length; return (
-          <Card key={r.id}>
-            <div className="flex items-center justify-between"><div className="font-mono text-[13px] font-semibold">{r.name}</div><span className="num text-[11px] text-muted">{done}/{r.checklist.length}</span></div>
-            <div className="text-[12px] text-muted mt-0.5">{r.desc}</div>
-            <input className="input mt-2 text-[12px]" placeholder="https://github.com/you/repo" value={s.url || ''} onChange={(e) => setRepo(r.id, { url: e.target.value })} />
-            <div className="grid grid-cols-2 gap-1 mt-2">{r.checklist.map((c) => <Checkbox key={c} label={c} checked={s.checklist?.[c]} onChange={() => toggleRepoItem(r.id, c)} />)}</div>
-            <Bar value={Math.round((done / r.checklist.length) * 100)} className="mt-3" color="rgb(var(--c-accent-glow))" />
-          </Card>
-        ) })}
-      </div>
-    </div>
-  )
-}

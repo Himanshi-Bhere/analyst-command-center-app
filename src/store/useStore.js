@@ -27,6 +27,9 @@ const initial = {
   hoursLog: {}, // date → minutes (manual extra)
   projects: {}, // pid → { stages: {stage: true}, links: {}, notes, deadline, insights, recs }
   repos: {}, // repoId → { url, checklist: {} }
+  weekly: {}, // showcaseId → { stages: {scoped,built,pushed,readme,shared}, url, notes }
+  github: { username: 'Himanshi-Bhere', logRepoUrl: '', pushLog: {} },
+  notify: { dismissed: {}, browser: false, lastShown: {} }, // dismissed: { 'date:id': true } // pushLog: { date: { itemId: true } }
   interview: {}, // qid → { confidence, myAnswer, needsRevision, strong }
   caseNotes: {}, // caseKey → { DEFINE: '', ... }
   simScores: {}, // pid → { qIndex: confidence }
@@ -60,7 +63,15 @@ export const useStore = create(persist((set, get) => ({
     if (status === 'done') next.completedOn = today
     if (status === 'active') next.startedAt = Date.now()
     if (status === 'open') { delete next.completedOn }
-    return { taskState: { ...s.taskState, [task.id]: next } }
+    const out = { taskState: { ...s.taskState, [task.id]: next } }
+    // showcase tasks auto-advance the weekly showcase tracker
+    if (task.showcase && task.showcaseStage && status === 'done') {
+      const cur = s.weekly[task.showcase] || { stages: {} }
+      const stages = { ...cur.stages, scoped: true, [task.showcaseStage]: true }
+      out.weekly = { ...s.weekly, [task.showcase]: { ...cur, stages } }
+      if (task.showcaseStage === 'pushed') out.github = { ...s.github, pushLog: { ...s.github.pushLog, [today]: { ...(s.github.pushLog[today] || {}), ['sc-' + task.showcase]: true } } }
+    }
+    return out
   }),
   moveTask: (task, date) => set((s) => ({ taskOverrides: { ...s.taskOverrides, [task.id]: { date, origDate: task.origDate || task.date } } })),
   dropTask: (task) => set((s) => ({ taskState: { ...s.taskState, [task.id]: { ...(s.taskState[task.id] || {}), status: 'dropped' } } })),
@@ -92,6 +103,13 @@ export const useStore = create(persist((set, get) => ({
   // ---- projects ----
   toggleStage: (pid, stage) => set((s) => { const p = s.projects[pid] || { stages: {} }; const stages = { ...p.stages, [stage]: !p.stages?.[stage] }; return { projects: { ...s.projects, [pid]: { ...p, stages } } } }),
   setProject: (pid, patch) => set((s) => ({ projects: { ...s.projects, [pid]: { ...(s.projects[pid] || { stages: {} }), ...patch } } })),
+  setShowcase: (id, patch) => set((s) => ({ weekly: { ...s.weekly, [id]: { ...(s.weekly[id] || { stages: {} }), ...patch } } })),
+  toggleShowcaseStage: (id, stage) => set((s) => { const cur = s.weekly[id] || { stages: {} }; const val = !cur.stages?.[stage]; const stages = { ...cur.stages, [stage]: val }; const patch = { weekly: { ...s.weekly, [id]: { ...cur, stages } } }; if (val && stage === 'pushed') { const today = s.today(); patch.github = { ...s.github, pushLog: { ...s.github.pushLog, [today]: { ...(s.github.pushLog[today] || {}), ['sc-' + id]: true } } } } return patch }),
+  dismissNotification: (id) => set((s) => ({ notify: { ...s.notify, dismissed: { ...(s.notify?.dismissed || {}), [id]: true } } })),
+  clearDismissed: () => set((s) => ({ notify: { ...s.notify, dismissed: {} } })),
+  setNotify: (patch) => set((s) => ({ notify: { ...(s.notify || {}), ...patch } })),
+  setGithub: (patch) => set((s) => ({ github: { ...s.github, ...patch } })),
+  togglePushed: (date, itemId) => set((s) => { const day = { ...(s.github.pushLog[date] || {}) }; day[itemId] = !day[itemId]; return { github: { ...s.github, pushLog: { ...s.github.pushLog, [date]: day } } } }),
   setRepo: (rid, patch) => set((s) => ({ repos: { ...s.repos, [rid]: { ...(s.repos[rid] || { checklist: {} }), ...patch } } })),
   toggleRepoItem: (rid, item) => set((s) => { const r = s.repos[rid] || { checklist: {} }; return { repos: { ...s.repos, [rid]: { ...r, checklist: { ...r.checklist, [item]: !r.checklist?.[item] } } } } }),
 
@@ -136,13 +154,16 @@ export const useStore = create(persist((set, get) => ({
   resetAll: () => set({ ...initial }),
 }), {
   name: 'acc-state-v1',
-  version: 6,
+  version: 8,
   migrate: (persisted) => {
     if (persisted?.settings?.name === 'Vedant') persisted.settings.name = 'Himanshi'
     if (persisted?.settings && (!persisted.settings.startedOn || persisted.settings.startedOn < DEFAULT_PROGRAM_START)) persisted.settings.startedOn = DEFAULT_PROGRAM_START
     if (persisted && !Array.isArray(persisted.scratch)) persisted.scratch = []
     if (persisted?.settings && !['clean', 'midnight', 'aurora', 'paper', 'neon'].includes(persisted.settings.theme)) persisted.settings.theme = persisted.settings.theme === 'light' ? 'paper' : 'clean'
     if (persisted?.settings && persisted.settings.theme === 'midnight' && !persisted.settings.themeChosen) persisted.settings.theme = 'clean'
+    if (persisted && !persisted.weekly) persisted.weekly = {}
+    if (persisted && !persisted.github) persisted.github = { username: 'Himanshi-Bhere', logRepoUrl: '', pushLog: {} }
+    if (persisted && !persisted.notify) persisted.notify = { dismissed: {}, browser: false, lastShown: {} }
     return persisted
   },
   storage: createJSONStorage(() => localStorage),
